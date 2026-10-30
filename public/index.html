@@ -192,7 +192,7 @@
     .consent strong { display: block; color: var(--ink); font-size: 13.5px; margin-bottom: 6px; }
     .consent ul { margin: 0; padding-left: 16px; }
     .consent li { margin: 2px 0; }
-    .consent-note { text-align: center; font-size: 12.5px; color: var(--ink-faint); margin: 10px 0 0; }
+    .consent-check { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); color: var(--ink); font-weight: 600; font-size: 14px; }
 
     .btn {
       width: 100%;
@@ -378,14 +378,14 @@
           <li>AI(Claude)에는 무작위 번호와 사주 결과만 보내고, 이름과 생년월일은 보내지 않아요.</li>
           <li>운영자만 볼 수 있고, 원본 생년월일은 편성 직후, 나머지는 프로젝트가 끝나면 삭제해요.</li>
         </ul>
+        <label class="check consent-check"><input type="checkbox" id="consent"> 위 내용을 확인했고 개인정보 수집·이용에 동의해요</label>
       </div>
 
       <div class="hp" aria-hidden="true">
         <label>웹사이트 <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
       </div>
 
-      <button class="btn" type="submit" id="submit" disabled>동의하고 내 사주 풀어보기</button>
-      <p class="consent-note">버튼을 누르면 위 안내에 동의한 것으로 봐요.</p>
+      <button class="btn" type="submit" id="submit" disabled>내 사주 풀어보기</button>
       <div class="error" id="error" role="alert"></div>
     </form>
 
@@ -430,6 +430,7 @@
     const timeInput = document.getElementById('birthTime');
     const timeUnknown = document.getElementById('timeUnknown');
     const dateInput = document.getElementById('birthDate');
+    const consent = document.getElementById('consent');
 
     if (!inviteCode) {
       document.getElementById('no-invite').hidden = false;
@@ -462,7 +463,7 @@
     }
 
     function refreshButton() {
-      const ready = form.name.value.trim() && parseDate(dateInput.value)
+      const ready = form.name.value.trim() && parseDate(dateInput.value) && consent.checked
         && (timeUnknown.checked || parseTime(timeInput.value));
       submitBtn.disabled = !ready;
     }
@@ -492,7 +493,7 @@
             name: form.name.value.trim(),
             birthDate: parseDate(dateInput.value),
             birthTime: timeUnknown.checked ? null : parseTime(timeInput.value),
-            consent: true,
+            consent: consent.checked,
             inviteCode,
             website: form.website.value,
           }),
@@ -502,7 +503,7 @@
         renderResult(form.name.value.trim(), data);
       } catch (err) {
         showError(err.message);
-        submitBtn.textContent = '동의하고 내 사주 풀어보기';
+        submitBtn.textContent = '내 사주 풀어보기';
         refreshButton();
       }
     });
