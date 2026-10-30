@@ -588,7 +588,8 @@
         const found = picks.find((p) => p.el === el);
         if (found) found.why.push(why); else picks.push({ el, why: [why] });
       };
-      if (m.spouse) add(m.spouse.element, '연애운을 채워줘요');
+      // 연인을 뜻하는 기운이 이미 충분하면(2개 이상) 더 권하지 않고 부족한 기운을 우선한다.
+      if (m.spouse && data.elements[m.spouse.element] <= 1) add(m.spouse.element, '나에게 연인을 뜻하는 기운이에요');
       m.lacking.forEach((el) => add(el, '나에게 부족한 기운이에요'));
       add(m.stemElement, '찰떡 타입이 가진 기운이에요');
 
