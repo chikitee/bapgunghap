@@ -328,6 +328,19 @@
     .bar .fill { height: 100%; width: 0; border-radius: 99px; transition: width 1s cubic-bezier(.2,.8,.2,1); }
     .bar .count { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-soft); font-size: 14px; }
 
+    .reading { margin-top: 26px; padding-top: 22px; border-top: 1px dashed var(--line); }
+    .reading h3 { font-family: "Gowun Batang", serif; font-size: 19px; margin: 0 0 4px; text-align: center; }
+    .reading .sub { text-align: center; font-size: 13.5px; color: var(--ink-faint); margin: 0 0 16px; }
+    .read-card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; }
+    .read-card + .read-card { margin-top: 10px; }
+    .read-head { display: flex; align-items: center; gap: 8px; }
+    .read-icon {
+      width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center;
+      background: var(--seal); color: #fbefe6; font-family: "Noto Serif KR", serif; font-weight: 900; font-size: 13px;
+    }
+    .read-label { font-size: 13px; font-weight: 600; color: var(--ink-faint); }
+    .read-card h4 { font-family: "Noto Serif KR", serif; font-weight: 900; font-size: 18px; margin: 10px 0 6px; }
+    .read-card p { margin: 0; font-size: 14.5px; color: var(--ink-soft); }
     .match { margin-top: 26px; padding-top: 22px; border-top: 1px dashed var(--line); }
     .match h3 { font-family: "Gowun Batang", serif; font-size: 19px; margin: 0 0 4px; text-align: center; }
     .match .sub { text-align: center; font-size: 13.5px; color: var(--ink-faint); margin: 0 0 18px; }
@@ -483,6 +496,7 @@
         <h3>나의 오행 분포</h3>
         <div id="bars"></div>
       </div>
+      <div class="reading" id="reading"></div>
       <div class="match" id="match"></div>
       <p class="next">입력 완료! 모두 입력하면<br><b>AI가 기운이 잘 맞는 밥조</b>를 짜서 알려드릴게요.</p>
     </section>
@@ -513,6 +527,20 @@
       금: ['쇠', '똑부러지고 맺고 끊음이 확실한 사람'],
       수: ['물', '차분하고 생각이 깊은 사람'],
     };
+
+    function renderReading(r) {
+      if (!r) return;
+      const cards = [['緣', '연애·결혼운', r.love], ['財', '재물운', r.money], ['業', '직업운', r.career]];
+      document.getElementById('reading').innerHTML = `
+        <h3>나의 사주 풀이</h3>
+        <p class="sub">재미로 보는 연애·돈·일 이야기</p>
+        ${cards.map(([icon, label, c]) => `
+          <article class="read-card">
+            <div class="read-head"><span class="read-icon">${icon}</span><span class="read-label">${label}</span></div>
+            <h4>${c.headline}</h4>
+            <p>${c.body}</p>
+          </article>`).join('')}`;
+    }
 
     function renderMatch(data) {
       const m = data.match;
@@ -662,7 +690,9 @@
       const el = data.dayMasterElement;
       document.getElementById('daymaster').innerHTML = `
         <div class="big" style="background:${COLOR[el]}">${dm}</div>
-        <div><strong>${dm}${el} 일간 · ${HANJA[el]}의 기운</strong><p>${DAY_MASTER_TEXT[dm] ?? ''}</p></div>`;
+        <div><strong>${HANJA[el]}(${el}) 기운을 타고난 사람</strong><p>${data.reading?.personality.body ?? DAY_MASTER_TEXT[dm] ?? ''}</p></div>`;
+
+      renderReading(data.reading);
 
       const max = Math.max(...Object.values(data.elements), 1);
       document.getElementById('bars').innerHTML = Object.entries(data.elements).map(([k, v]) => `
