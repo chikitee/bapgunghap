@@ -21,7 +21,8 @@ function isAdmin(req) {
 async function loadParticipants() {
   const { data, error } = await supabase
     .from('participants')
-    .select('id, display_name, saju_results(day_pillar, day_master_element, elements, gender, cross_check_ok)');
+    .select('id, display_name, created_at, saju_results(year_pillar, month_pillar, day_pillar, hour_pillar, day_master_element, elements, gender, cross_check_ok)')
+    .order('created_at');
   if (error) throw error;
   return data.filter((p) => p.saju_results);
 }
@@ -70,6 +71,13 @@ export default async function handler(req, res) {
         name: r.display_name,
         gender: r.saju_results.gender,
         crossCheckOk: r.saju_results.cross_check_ok,
+        // 운영자 확인용 사주 여덟 글자와 오행. 원본 생년월일은 보내지 않는다.
+        pillars: {
+          year: r.saju_results.year_pillar, month: r.saju_results.month_pillar,
+          day: r.saju_results.day_pillar, hour: r.saju_results.hour_pillar,
+        },
+        dayMasterElement: r.saju_results.day_master_element,
+        elements: r.saju_results.elements,
       })),
     });
   }
