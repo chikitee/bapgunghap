@@ -119,6 +119,7 @@
         <div class="stat"><b id="base-score"></b><span>코드 최적화 점수</span></div>
         <div class="stat"><b id="calls"></b><span>AI 도구 호출</span></div>
       </div>
+      <div class="error" id="fallback-note" role="status"></div>
       <div class="groups" id="groups"></div>
       <section class="card" style="margin-top:16px">
         <h2>이 편성으로 확정할까요?</h2>
@@ -186,7 +187,9 @@
         $('publish').textContent = '이 편성으로 확정하고 공개하기';
         $('ai-score').textContent = data.ai.totalScore;
         $('base-score').textContent = data.baseline.totalScore;
-        $('calls').textContent = `${data.toolCalls}회`;
+        $('calls').textContent = data.fallbackReason ? '대체' : `${data.toolCalls}회`;
+        $('fallback-note').textContent = data.fallbackReason ? `AI 편성이 실패해서 코드 편성안을 보여드려요. 이대로 확정해도 되고, 잠시 뒤 다시 편성해도 돼요. (사유: ${data.fallbackReason})` : '';
+        $('fallback-note').classList.toggle('show', !!data.fallbackReason);
         $('groups').innerHTML = data.ai.groups.map((g) => `
           <article class="group">
             <div class="group-head"><h3>${esc(g.name)}</h3><span class="score">궁합 ${g.score}점</span></div>

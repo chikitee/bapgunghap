@@ -89,23 +89,35 @@ export default async function handler(req, res) {
 
   if (body.action !== 'run') return res.status(400).json({ error: '알 수 없는 요청이에요.' });
   if (rows.length < 4) return res.status(400).json({ error: '편성하려면 최소 4명이 필요해요.' });
-  if (!process.env.GEMINI_API_KEY) return res.status(500).json({ error: 'GEMINI_API_KEY가 설정되지 않았어요.' });
 
   const { people, realIdOf } = pseudonymize(rows);
   const model = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
   const startedAt = Date.now();
 
+  // 코드 편성을 먼저 만들어 두고, AI가 실패하면(한도 초과, 모델 종료, 시간 초과) 이 안으로 대신한다.
+  const baseline = baselineGrouping(people);
   let result;
+  let fallbackReason = null;
   try {
+    if (!process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY가 설정되지 않았어요.');
     result = await runGroupingAgent(people, { apiKey: process.env.GEMINI_API_KEY, model });
   } catch (err) {
-    return res.status(502).json({ error: `AI 편성에 실패했어요: ${err.message}` });
+    fallbackReason = err.message;
+    result = {
+      groups: baseline.groups.map((g, i) => ({
+        name: `${i + 1}조`,
+        reason: '궁합 점수 합이 가장 높아지도록 코드로 찾은 조합이에요. 서로 부족한 기운을 채워주는 사람끼리 모였어요.',
+        members: g.members,
+      })),
+      evaluation: baseline,
+      log: [{ tool: 'fallback', error: err.message }],
+      turns: 0,
+    };
   }
-  const baseline = baselineGrouping(people);
 
   // AI 판단 기록: 무엇을 보냈고 어떤 도구를 불렀고 무엇을 냈는지 남긴다. 실명은 넣지 않는다.
   const { data: run } = await supabase.from('grouping_runs').insert({
-    model,
+    model: fallbackReason ? `fallback:${model}` : model,
     sent_to_ai: [...people.values()],
     tool_log: result.log,
     ai_groups: result.groups,
@@ -127,6 +139,7 @@ export default async function handler(req, res) {
   return res.status(200).json({
     runId: run?.id ?? null,
     model,
+    fallbackReason,
     turns: result.turns,
     toolCalls: result.log.length,
     ai: {

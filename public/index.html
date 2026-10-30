@@ -351,6 +351,28 @@
     .read-label { font-size: 13px; font-weight: 600; color: var(--ink-faint); }
     .read-card h4 { font-family: "Noto Serif KR", serif; font-weight: 900; font-size: 18px; margin: 10px 0 6px; }
     .read-card p { margin: 0; font-size: 14.5px; color: var(--ink-soft); }
+    .specials { margin-top: 26px; padding-top: 22px; border-top: 1px dashed var(--line); }
+    .specials h3 { font-family: "Gowun Batang", serif; font-size: 19px; margin: 0 0 4px; text-align: center; }
+    .specials .sub { text-align: center; font-size: 13.5px; color: var(--ink-faint); margin: 0 0 16px; }
+    .charm { display: flex; align-items: center; gap: 16px; padding: 18px; border-radius: 16px; background: #fff; border: 1px solid var(--line); }
+    .charm-num { font-family: "Noto Serif KR", serif; font-weight: 900; font-size: 44px; line-height: 1; color: var(--seal); white-space: nowrap; }
+    .charm-num small { font-size: 16px; color: var(--ink-faint); font-weight: 600; }
+    .charm-body { flex: 1; min-width: 0; }
+    .charm-body b { display: block; font-size: 15px; }
+    .charm-track { height: 8px; border-radius: 99px; background: var(--paper-deep); margin-top: 8px; overflow: hidden; }
+    .charm-fill { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #e08a7a, var(--seal)); transition: width 1.2s cubic-bezier(.2,.8,.2,1); }
+    .badges { display: grid; gap: 10px; margin-top: 10px; }
+    .badge { display: flex; gap: 12px; align-items: flex-start; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
+    .badge-icon { flex: none; width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--seal); color: #fbefe6; font-family: "Noto Serif KR", serif; font-weight: 900; font-size: 19px; transform: rotate(-3deg); }
+    .badge b { display: block; font-size: 15.5px; }
+    .badge p { margin: 2px 0 0; font-size: 14px; color: var(--ink-soft); }
+    .no-badge { margin: 10px 0 0; font-size: 14px; color: var(--ink-faint); text-align: center; }
+    .year-card { margin-top: 10px; padding: 18px; border-radius: 16px; background: linear-gradient(160deg, #7e2418, var(--seal)); color: #fbefe6; }
+    .year-card .year-label { margin: 0; font-size: 12.5px; letter-spacing: .12em; color: #f1c9bd; }
+    .year-card h4 { font-family: "Noto Serif KR", serif; font-weight: 900; font-size: 21px; margin: 4px 0 12px; }
+    .year-row { display: flex; gap: 10px; font-size: 14.5px; }
+    .year-row + .year-row { margin-top: 8px; }
+    .year-row span { flex: none; width: 34px; font-weight: 700; color: #f6d9cf; }
     .match { margin-top: 26px; padding-top: 22px; border-top: 1px dashed var(--line); }
     .match h3 { font-family: "Gowun Batang", serif; font-size: 19px; margin: 0 0 4px; text-align: center; }
     .match .sub { text-align: center; font-size: 13.5px; color: var(--ink-faint); margin: 0 0 18px; }
@@ -508,6 +530,7 @@
         <div id="bars"></div>
       </div>
       <div class="reading" id="reading"></div>
+      <div class="specials" id="specials"></div>
       <div class="match" id="match"></div>
       <p class="next" id="next">입력 완료! 모두 입력하면 <b>AI가 기운이 잘 맞는 밥조</b>를 짜요.<br>편성이 끝난 뒤 같은 정보로 다시 입력하면 내 밥조를 볼 수 있어요.</p>
     </section>
@@ -572,6 +595,29 @@
             <h4>${c.headline}</h4>
             <p>${c.body}</p>
           </article>`).join('')}`;
+    }
+
+    function renderSpecials(sp) {
+      const box = document.getElementById('specials');
+      if (!sp) { box.hidden = true; return; }
+      const y = sp.nextYear;
+      box.innerHTML = `
+        <h3>나의 매력과 내년 운세</h3>
+        <p class="sub">사주 속 숨은 기운으로 보는 재미 풀이</p>
+        <div class="charm">
+          <div class="charm-num">${sp.charm}<small>점</small></div>
+          <div class="charm-body"><b>매력 지수</b><div class="charm-track"><div class="charm-fill" data-w="${sp.charm}"></div></div></div>
+        </div>
+        ${sp.badges.length ? `<div class="badges">${sp.badges.map((b) => `
+          <article class="badge"><span class="badge-icon">${b.icon}</span><div><b>${b.title}</b><p>${b.body}</p></div></article>`).join('')}</div>`
+          : '<p class="no-badge">특별한 살은 없어요. 대신 무난하고 편안한 매력으로 오래 사랑받는 타입이에요.</p>'}
+        <article class="year-card">
+          <p class="year-label">${y.name}</p>
+          <h4>${y.headline}</h4>
+          <div class="year-row"><span>연애</span><p style="margin:0">${y.love}</p></div>
+          <div class="year-row"><span>재물</span><p style="margin:0">${y.money}</p></div>
+          <div class="year-row"><span>공부</span><p style="margin:0">${y.study}</p></div>
+        </article>`;
     }
 
     function renderMatch(data) {
@@ -726,6 +772,7 @@
         <div><strong>${HANJA[el]}(${el}) 기운을 타고난 사람</strong><p>${data.reading?.personality.body ?? DAY_MASTER_TEXT[dm] ?? ''}</p></div>`;
 
       renderReading(data.reading);
+      renderSpecials(data.specials);
 
       const max = Math.max(...Object.values(data.elements), 1);
       document.getElementById('bars').innerHTML = Object.entries(data.elements).map(([k, v]) => `
@@ -740,7 +787,7 @@
       result.classList.add('show');
       result.scrollIntoView({ behavior: 'smooth', block: 'start' });
       requestAnimationFrame(() => setTimeout(() => {
-        document.querySelectorAll('.bar .fill').forEach((f) => { f.style.width = `${f.dataset.w}%`; });
+        document.querySelectorAll('.bar .fill, .charm-fill').forEach((f) => { f.style.width = `${f.dataset.w}%`; });
       }, 300));
     }
   </script>
