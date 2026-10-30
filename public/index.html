@@ -183,25 +183,16 @@
 
     .consent {
       background: var(--paper);
-      border: 1px dashed var(--line);
       border-radius: 14px;
-      padding: 16px;
-      margin: 8px 0 20px;
+      padding: 14px 16px;
+      margin: 8px 0 16px;
+      font-size: 13px;
+      color: var(--ink-soft);
     }
-    .consent summary {
-      cursor: pointer;
-      font-weight: 600; font-size: 14.5px;
-      list-style: none;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .consent summary::-webkit-details-marker { display: none; }
-    .consent summary::after { content: "자세히"; font-weight: 400; font-size: 13px; color: var(--ink-faint); }
-    .consent[open] summary::after { content: "접기"; }
-    .consent dl { margin: 14px 0 0; font-size: 13.5px; color: var(--ink-soft); }
-    .consent dt { font-weight: 600; color: var(--ink); margin-top: 10px; }
-    .consent dt:first-child { margin-top: 0; }
-    .consent dd { margin: 2px 0 0; }
-    .consent .check { margin-top: 14px; color: var(--ink); font-weight: 500; }
+    .consent strong { display: block; color: var(--ink); font-size: 13.5px; margin-bottom: 6px; }
+    .consent ul { margin: 0; padding-left: 16px; }
+    .consent li { margin: 2px 0; }
+    .consent-note { text-align: center; font-size: 12.5px; color: var(--ink-faint); margin: 10px 0 0; }
 
     .btn {
       width: 100%;
@@ -364,44 +355,37 @@
 
       <div class="field">
         <label class="title" for="name">이름 <small>닉네임도 괜찮아요</small></label>
-        <input type="text" id="name" name="name" maxlength="20" autocomplete="nickname" placeholder="예: 김치연" required>
+        <input type="text" id="name" name="name" maxlength="20" autocomplete="nickname" placeholder="예: 이씨엔" required>
       </div>
 
       <div class="field">
         <label class="title" for="birthDate">생년월일 <small>양력</small></label>
-        <input type="date" id="birthDate" name="birthDate" min="1900-01-01" required>
+        <input type="text" id="birthDate" name="birthDate" inputmode="numeric" autocomplete="off" placeholder="예: 2001.03.15" maxlength="10" required>
         <p class="hint">음력 생일만 알고 있다면 <a href="https://astro.kasi.re.kr/life/pageView/8" target="_blank" rel="noopener">한국천문연구원 음양력 변환</a>에서 양력으로 바꿔 입력해 주세요.</p>
       </div>
 
       <div class="field">
-        <label class="title" for="birthTime">태어난 시각 <small>선택</small></label>
-        <input type="time" id="birthTime" name="birthTime">
+        <label class="title" for="birthTime">태어난 시각 <small>24시간 기준 · 선택</small></label>
+        <input type="text" id="birthTime" name="birthTime" inputmode="numeric" autocomplete="off" placeholder="예: 14:30 (오후 2시 30분)" maxlength="5">
         <label class="check"><input type="checkbox" id="timeUnknown"> 태어난 시각을 몰라요</label>
         <p class="hint">시각을 알면 여덟 글자 모두로, 모르면 여섯 글자로 풀어요.</p>
       </div>
 
-      <details class="consent">
-        <summary>개인정보 수집·이용 안내</summary>
-        <dl>
-          <dt>수집 항목</dt>
-          <dd>이름(닉네임), 양력 생년월일, 태어난 시각(선택)</dd>
-          <dt>이용 목적</dt>
-          <dd>사주 계산과 밥조 편성. 다른 목적으로 쓰지 않아요.</dd>
-          <dt>AI 활용</dt>
-          <dd>밥조 편성에 AI(Claude)를 써요. AI에는 무작위 번호와 사주 결과만 보내고, 이름과 생년월일은 보내지 않아요.</dd>
-          <dt>보관 기간</dt>
-          <dd>원본 생년월일은 밥조 편성 직후, 나머지 정보는 프로젝트가 끝나면 모두 삭제해요.</dd>
-          <dt>열람 권한</dt>
-          <dd>운영자만 볼 수 있어요. 다른 참여자는 내 정보를 볼 수 없어요.</dd>
-        </dl>
-        <label class="check"><input type="checkbox" id="consent" required> 위 내용을 확인했고 동의해요</label>
-      </details>
+      <div class="consent">
+        <strong>개인정보 수집·이용 안내</strong>
+        <ul>
+          <li>이름, 양력 생년월일, 태어난 시각(선택)을 사주 계산과 밥조 편성에만 써요.</li>
+          <li>AI(Claude)에는 무작위 번호와 사주 결과만 보내고, 이름과 생년월일은 보내지 않아요.</li>
+          <li>운영자만 볼 수 있고, 원본 생년월일은 편성 직후, 나머지는 프로젝트가 끝나면 삭제해요.</li>
+        </ul>
+      </div>
 
       <div class="hp" aria-hidden="true">
         <label>웹사이트 <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
       </div>
 
-      <button class="btn" type="submit" id="submit" disabled>내 사주 풀어보기</button>
+      <button class="btn" type="submit" id="submit" disabled>동의하고 내 사주 풀어보기</button>
+      <p class="consent-note">버튼을 누르면 위 안내에 동의한 것으로 봐요.</p>
       <div class="error" id="error" role="alert"></div>
     </form>
 
@@ -445,18 +429,41 @@
     const errorBox = document.getElementById('error');
     const timeInput = document.getElementById('birthTime');
     const timeUnknown = document.getElementById('timeUnknown');
-    const consent = document.getElementById('consent');
+    const dateInput = document.getElementById('birthDate');
 
     if (!inviteCode) {
       document.getElementById('no-invite').hidden = false;
     } else {
       form.hidden = false;
     }
-    document.getElementById('birthDate').max = new Date().toISOString().slice(0, 10);
+
+    // 숫자만 입력받아 2001.03.15, 14:30 형태로 자동 정리한다.
+    dateInput.addEventListener('input', () => {
+      const d = dateInput.value.replace(/\D/g, '').slice(0, 8);
+      dateInput.value = [d.slice(0, 4), d.slice(4, 6), d.slice(6, 8)].filter(Boolean).join('.');
+    });
+    timeInput.addEventListener('input', () => {
+      const d = timeInput.value.replace(/\D/g, '').slice(0, 4);
+      timeInput.value = d.length > 2 ? `${d.slice(0, 2)}:${d.slice(2)}` : d;
+    });
+
+    function parseDate(v) {
+      const m = /^(\d{4})\.(\d{2})\.(\d{2})$/.exec(v);
+      if (!m) return null;
+      const [y, mo, d] = m.slice(1).map(Number);
+      const date = new Date(y, mo - 1, d);
+      if (date.getMonth() !== mo - 1 || y < 1900 || date > new Date()) return null;
+      return `${m[1]}-${m[2]}-${m[3]}`;
+    }
+    function parseTime(v) {
+      const m = /^(\d{2}):(\d{2})$/.exec(v);
+      if (!m || Number(m[1]) > 23 || Number(m[2]) > 59) return null;
+      return v;
+    }
 
     function refreshButton() {
-      const ready = form.name.value.trim() && form.birthDate.value && consent.checked
-        && (timeUnknown.checked || timeInput.value);
+      const ready = form.name.value.trim() && parseDate(dateInput.value)
+        && (timeUnknown.checked || parseTime(timeInput.value));
       submitBtn.disabled = !ready;
     }
     form.addEventListener('input', refreshButton);
@@ -466,7 +473,6 @@
       if (timeUnknown.checked) timeInput.value = '';
       refreshButton();
     });
-    consent.addEventListener('change', () => { if (consent.checked) consent.closest('details').open = false; });
 
     function showError(msg) {
       errorBox.textContent = msg;
@@ -484,9 +490,9 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: form.name.value.trim(),
-            birthDate: form.birthDate.value,
-            birthTime: timeUnknown.checked ? null : timeInput.value,
-            consent: consent.checked,
+            birthDate: parseDate(dateInput.value),
+            birthTime: timeUnknown.checked ? null : parseTime(timeInput.value),
+            consent: true,
             inviteCode,
             website: form.website.value,
           }),
@@ -496,7 +502,7 @@
         renderResult(form.name.value.trim(), data);
       } catch (err) {
         showError(err.message);
-        submitBtn.textContent = '내 사주 풀어보기';
+        submitBtn.textContent = '동의하고 내 사주 풀어보기';
         refreshButton();
       }
     });
