@@ -328,6 +328,16 @@
     .bar .fill { height: 100%; width: 0; border-radius: 99px; transition: width 1s cubic-bezier(.2,.8,.2,1); }
     .bar .count { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-soft); font-size: 14px; }
 
+    .bapjo {
+      margin: 0 0 22px; padding: 20px; border-radius: 18px; text-align: center;
+      background: var(--ink); color: var(--paper);
+    }
+    .bapjo-label { margin: 0; font-size: 12.5px; letter-spacing: .2em; color: #c9bfae; }
+    .bapjo h3 { font-family: "Noto Serif KR", serif; font-weight: 900; font-size: 26px; margin: 4px 0 14px; }
+    .bapjo-members { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+    .member { padding: 5px 12px; border-radius: 99px; background: rgba(244,239,228,.12); font-size: 14px; }
+    .member.me { background: var(--seal); font-weight: 700; }
+    .bapjo-reason { margin: 14px 0 0; font-size: 14.5px; color: #e6ddcc; text-align: left; }
     .reading { margin-top: 26px; padding-top: 22px; border-top: 1px dashed var(--line); }
     .reading h3 { font-family: "Gowun Batang", serif; font-size: 19px; margin: 0 0 4px; text-align: center; }
     .reading .sub { text-align: center; font-size: 13.5px; color: var(--ink-faint); margin: 0 0 16px; }
@@ -488,6 +498,7 @@
       <div class="result-head">
         <p class="eyebrow" id="result-name"></p>
         <p class="again" id="again" hidden>이미 참여했어요. 처음 저장된 결과를 다시 보여드려요.</p>
+        <div class="bapjo" id="bapjo" hidden></div>
         <h2>나의 사주 여덟 글자</h2>
       </div>
       <div class="pillars" id="pillars"></div>
@@ -498,7 +509,7 @@
       </div>
       <div class="reading" id="reading"></div>
       <div class="match" id="match"></div>
-      <p class="next">입력 완료! 모두 입력하면<br><b>AI가 기운이 잘 맞는 밥조</b>를 짜서 알려드릴게요.</p>
+      <p class="next" id="next">입력 완료! 모두 입력하면 <b>AI가 기운이 잘 맞는 밥조</b>를 짜요.<br>편성이 끝난 뒤 같은 정보로 다시 입력하면 내 밥조를 볼 수 있어요.</p>
     </section>
 
     <footer>밥궁합 · 입력한 정보는 밥조 편성에만 쓰이고 끝나면 삭제돼요</footer>
@@ -527,6 +538,27 @@
       금: ['쇠', '똑부러지고 맺고 끊음이 확실한 사람'],
       수: ['물', '차분하고 생각이 깊은 사람'],
     };
+
+    function renderBapjo(b) {
+      const box = document.getElementById('bapjo');
+      box.hidden = !b;
+      document.getElementById('next').hidden = !!b;
+      if (!b) return;
+      box.innerHTML = `
+        <p class="bapjo-label">나의 밥조</p>
+        <h3></h3>
+        <div class="bapjo-members"></div>
+        <p class="bapjo-reason"></p>`;
+      box.querySelector('h3').textContent = b.name;
+      box.querySelector('.bapjo-reason').textContent = b.reason;
+      const list = box.querySelector('.bapjo-members');
+      for (const m of b.members) {
+        const span = document.createElement('span');
+        span.className = m.me ? 'member me' : 'member';
+        span.textContent = m.me ? `${m.name} (나)` : m.name;
+        list.appendChild(span);
+      }
+    }
 
     function renderReading(r) {
       if (!r) return;
@@ -700,6 +732,7 @@
         <div class="track"><div class="fill" data-w="${(v / max) * 100}" style="background:${COLOR[k]}"></div></div>
         <span class="count">${v}</span></div>`).join('');
 
+      renderBapjo(data.bapjo);
       renderMatch({ ...data, gender: form.gender.value });
 
       const result = document.getElementById('result');

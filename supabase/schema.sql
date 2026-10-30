@@ -53,13 +53,24 @@ create table if not exists grouping_runs (
   ai_score integer not null,
   baseline_score integer not null,
   duration_ms integer not null,
+  assignment jsonb,          -- 확정용: 조별 참여자 ID(UUID). AI에는 보내지 않는다.
   created_at timestamptz not null default now()
+);
+
+-- 공개된 밥조: 참여자가 다시 들어와 같은 정보를 입력하면 자기 조를 볼 수 있다.
+create table if not exists bapjo_assignments (
+  participant_id uuid primary key references participants(id) on delete cascade,
+  group_no integer not null,
+  group_name text not null,
+  group_reason text not null,
+  published_at timestamptz not null default now()
 );
 
 alter table participants enable row level security;
 alter table birth_inputs enable row level security;
 alter table saju_results enable row level security;
 alter table grouping_runs enable row level security;
+alter table bapjo_assignments enable row level security;
 
 -- 정책을 일부러 만들지 않는다: anon/authenticated 역할은 아무것도 할 수 없다.
 

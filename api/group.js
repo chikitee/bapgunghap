@@ -74,6 +74,19 @@ export default async function handler(req, res) {
     });
   }
 
+  if (body.action === 'publish') {
+    const { data: run } = await supabase.from('grouping_runs').select('assignment').eq('id', body.runId).maybeSingle();
+    if (!run?.assignment) return res.status(404).json({ error: '확정할 편성안을 찾지 못했어요.' });
+    const rowsToSave = run.assignment.flatMap((g, i) => g.participant_ids.map((id) => ({
+      participant_id: id, group_no: i + 1, group_name: g.name, group_reason: g.reason,
+    })));
+    // 이전에 공개한 편성은 지우고 새 편성으로 바꾼다.
+    const { error: delErr } = await supabase.from('bapjo_assignments').delete().not('participant_id', 'is', null);
+    const { error: insErr } = delErr ? { error: delErr } : await supabase.from('bapjo_assignments').insert(rowsToSave);
+    if (insErr) return res.status(500).json({ error: '편성을 공개하지 못했어요.' });
+    return res.status(200).json({ published: rowsToSave.length });
+  }
+
   if (body.action !== 'run') return res.status(400).json({ error: '알 수 없는 요청이에요.' });
   if (rows.length < 4) return res.status(400).json({ error: '편성하려면 최소 4명이 필요해요.' });
   if (!process.env.GEMINI_API_KEY) return res.status(500).json({ error: 'GEMINI_API_KEY가 설정되지 않았어요.' });
@@ -91,7 +104,7 @@ export default async function handler(req, res) {
   const baseline = baselineGrouping(people);
 
   // AI 판단 기록: 무엇을 보냈고 어떤 도구를 불렀고 무엇을 냈는지 남긴다. 실명은 넣지 않는다.
-  await supabase.from('grouping_runs').insert({
+  const { data: run } = await supabase.from('grouping_runs').insert({
     model,
     sent_to_ai: [...people.values()],
     tool_log: result.log,
@@ -99,7 +112,12 @@ export default async function handler(req, res) {
     ai_score: result.evaluation.totalScore,
     baseline_score: baseline.totalScore,
     duration_ms: Date.now() - startedAt,
-  });
+    assignment: result.groups.map((g) => ({
+      name: g.name,
+      reason: g.reason,
+      participant_ids: g.members.map((alias) => realIdOf.get(alias).id),
+    })),
+  }).select('id').single();
 
   const named = (ids) => ids.map((alias) => ({
     alias,
@@ -107,6 +125,7 @@ export default async function handler(req, res) {
     gender: people.get(alias).gender,
   }));
   return res.status(200).json({
+    runId: run?.id ?? null,
     model,
     turns: result.turns,
     toolCalls: result.log.length,

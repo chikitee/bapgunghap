@@ -120,6 +120,12 @@
         <div class="stat"><b id="calls"></b><span>AI 도구 호출</span></div>
       </div>
       <div class="groups" id="groups"></div>
+      <section class="card" style="margin-top:16px">
+        <h2>이 편성으로 확정할까요?</h2>
+        <p class="muted" style="margin-bottom:14px">확정하면 학회원이 같은 정보로 다시 입력했을 때 자기 밥조(조 이름, 조원, 설명)를 볼 수 있어요. 점수는 보이지 않아요. 다시 편성해서 확정하면 새 편성으로 바뀌어요.</p>
+        <button class="btn big" id="publish">이 편성으로 확정하고 공개하기</button>
+        <div class="error" id="publish-error" role="alert"></div>
+      </section>
       <details class="card">
         <summary>비교용: 코드만으로 찾은 편성</summary>
         <div class="groups" id="baseline" style="margin-top:12px"></div>
@@ -129,17 +135,18 @@
 
   <script>
     let password = '';
+    let runId = null;
     try { password = sessionStorage.getItem('bap-admin') || ''; } catch {}
 
     const $ = (id) => document.getElementById(id);
     const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const chip = (p, warn) => `<span class="chip${warn ? ' warn' : ''}"><span class="g ${p.gender === 'female' ? 'f' : 'm'}">${p.gender === 'female' ? '여' : '남'}</span>${esc(p.name)}</span>`;
 
-    async function api(action) {
+    async function api(action, extra = {}) {
       const res = await fetch('/api/group', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action, ...extra }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || '문제가 생겼어요.');
@@ -174,6 +181,9 @@
       $('run-error').classList.remove('show');
       try {
         const data = await api('run');
+        runId = data.runId;
+        $('publish').disabled = !runId;
+        $('publish').textContent = '이 편성으로 확정하고 공개하기';
         $('ai-score').textContent = data.ai.totalScore;
         $('base-score').textContent = data.baseline.totalScore;
         $('calls').textContent = `${data.toolCalls}회`;
@@ -196,6 +206,20 @@
       } finally {
         btn.disabled = false;
         btn.textContent = '다시 편성하기';
+      }
+    });
+
+    $('publish').addEventListener('click', async () => {
+      const btn = $('publish');
+      btn.disabled = true;
+      $('publish-error').classList.remove('show');
+      try {
+        const data = await api('publish', { runId });
+        btn.textContent = `공개 완료 · ${data.published}명`;
+      } catch (err) {
+        $('publish-error').textContent = err.message;
+        $('publish-error').classList.add('show');
+        btn.disabled = false;
       }
     });
 

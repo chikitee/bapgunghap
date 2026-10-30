@@ -65,7 +65,7 @@ export default async function handler(req, res) {
 
   const existing = await findExisting(input.name, saju, input.gender);
   if (existing.exists) {
-    if (existing.same) return sendResult(res, saju, input.gender, true);
+    if (existing.same) return sendResult(res, saju, input.gender, true, await findBapjo(existing.id));
     return bad(res, 409, '같은 이름으로 이미 참여한 사람이 있어요. 본인이라면 처음 입력한 정보 그대로, 다른 사람이라면 이름 뒤에 숫자를 붙여 입력해 주세요.');
   }
 
@@ -106,7 +106,7 @@ export default async function handler(req, res) {
   return sendResult(res, saju, input.gender, false);
 }
 
-function sendResult(res, saju, gender, alreadySubmitted) {
+function sendResult(res, saju, gender, alreadySubmitted, bapjo = null) {
   return res.status(200).json({
     ok: true,
     alreadySubmitted,
@@ -117,7 +117,24 @@ function sendResult(res, saju, gender, alreadySubmitted) {
     timeKnown: saju.timeKnown,
     match: findIdealMatch(saju, gender),
     reading: readSaju(saju, gender),
+    bapjo,
   });
+}
+
+// 공개된 밥조가 있으면 조 이름, 이유, 조원 이름을 돌려준다. 본인 확인을 통과한 사람에게만 쓴다.
+async function findBapjo(participantId) {
+  const { data: mine } = await supabase
+    .from('bapjo_assignments').select('group_no, group_name, group_reason')
+    .eq('participant_id', participantId).maybeSingle();
+  if (!mine) return null;
+  const { data: members } = await supabase
+    .from('bapjo_assignments').select('participant_id, participants(display_name)')
+    .eq('group_no', mine.group_no);
+  return {
+    name: mine.group_name,
+    reason: mine.group_reason,
+    members: (members ?? []).map((m) => ({ name: m.participants?.display_name ?? '', me: m.participant_id === participantId })),
+  };
 }
 
 // 같은 이름이 이미 있으면 새로 저장하지 않는다. 입력한 사주와 성별이 저장된 것과 같을 때만
@@ -137,5 +154,5 @@ async function findExisting(name, saju, gender) {
     && stored.day_pillar === saju.pillars.day
     && stored.hour_pillar === saju.pillars.hour
     && stored.gender === gender;
-  return { exists: true, same };
+  return { exists: true, same, id: person.id };
 }
