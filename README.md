@@ -1,6 +1,6 @@
 # 밥궁합
 
-사주로 찾는 나와 잘 맞는 밥조. 학회원이 웹에서 생년월일을 입력하면 서버가 만세력으로 사주를 계산해 DB에 저장하고, 이후 AI(Claude)가 사주 결과만 보고 밥조를 편성한다.
+사주로 찾는 나와 잘 맞는 밥조. 학회원이 웹에서 생년월일을 입력하면 서버가 만세력으로 사주를 계산해 DB에 저장하고, 이후 AI 에이전트(Google Gemini)가 궁합 도구를 호출해 밥조를 편성한다.
 
 ## 구조
 
@@ -10,6 +10,8 @@
 | 서버 함수 | `api/submit.js` (Vercel Functions, Node 18+) | 무료 |
 | 사주 계산 | `lib/saju.js`: `manseryeok`로 계산, `lunar-javascript`로 교차검증 | 무료 |
 | 데이터베이스 | Supabase PostgreSQL, `supabase/schema.sql` | 무료 |
+| AI 편성 | `api/group.js`, `lib/agent.js`: Gemini 함수 호출 에이전트, `lib/compat.js`: 궁합 점수와 기준선 | 무료 등급 |
+| 운영자 페이지 | `public/admin.html` | 무료 |
 
 처리 순서: 입력 → 초대코드·동의·입력값 검증 → 사주 계산(진태양시 보정) → 교차검증 → DB 저장 → 본인 사주만 화면에 표시.
 
@@ -18,7 +20,9 @@
 - **최소 수집과 동의**: 이름(닉네임), 양력 생년월일, 시각(선택)만 받고, 제출 전에 동의를 받는다. 동의 시각과 문구 버전을 저장한다.
 - **가명 처리**: 신원(`participants`), 원본 생년월일(`birth_inputs`), 사주 결과(`saju_results`)를 테이블로 나누고 무작위 UUID로만 잇는다.
 - **접근 통제**: 세 테이블 모두 RLS를 켜고 정책을 두지 않는다. 브라우저용 공개 키로는 아무것도 읽거나 쓸 수 없고, 서버 함수의 `service_role` 키로만 접근한다. 이 키는 Vercel 환경변수에만 둔다.
-- **AI 전송 최소화**: AI에는 `saju_results`만 넘긴다.
+- **AI 전송 최소화와 재식별 방지**: AI에는 매번 새로 섞은 가명 번호(P01…), 성별, 일간·일지, 오행 개수만 보낸다. 연주·월주까지 보내면 생년월일을 역산할 수 있어서 뺐다. Gemini 무료 등급은 입력이 서비스 개선에 쓰일 수 있다는 위험을 이 최소화로 낮추고, 남은 위험은 동의 안내에 고지했다.
+- **AI 판단 통제**: 궁합 점수는 코드(`lib/compat.js`)가 계산하고, AI는 도구를 호출해 판단만 한다. 최종안은 `submit_groups` 도구로만 제출되며 서버가 규칙(전원 한 번씩, 조 인원)을 검사해 통과해야 확정된다. AI에 보낸 데이터, 도구 호출 과정, 결과, 코드 최적화 기준선 점수를 `grouping_runs`에 남긴다.
+- **운영자 페이지**: `/admin.html`은 `ADMIN_PASSWORD`로 보호하고(상수 시간 비교), 실명은 서버에서만 가명 번호와 다시 연결한다.
 - **악용 방지**: 초대코드, 봇용 숨김 필드, 같은 이름 중복 차단.
 - **보관 기간**: 편성 직후 `delete from birth_inputs;`로 원본 생년월일을 삭제하고, 프로젝트가 끝나면 전부 삭제한다.
 - **계산 정확성**: 두 라이브러리 결과가 다르면 `cross_check_ok = false`로 표시한다. `npm run crosscheck`로 대량 검증(2026-10-30 기준 5,000건 100% 일치).
@@ -43,6 +47,9 @@
      - `SUPABASE_URL`: Supabase Project URL
      - `SUPABASE_SERVICE_ROLE_KEY`: Supabase service_role 키
      - `INVITE_CODE`: 아무도 추측 못 할 무작위 문자열(저장소에 적지 않는다)
+     - `ADMIN_PASSWORD`: 운영자 페이지 비밀번호
+     - `GEMINI_API_KEY`: Google AI Studio API 키(무료 등급)
+     - `GEMINI_MODEL`(선택): 기본값 `gemini-3.6-flash`
 4. 학회원에게 `https://<배포주소>/?code=<INVITE_CODE>` 링크를 보낸다.
 
 ## 로컬 검증

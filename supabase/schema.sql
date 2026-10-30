@@ -43,9 +43,23 @@ create table if not exists saju_results (
   created_at timestamptz not null default now()
 );
 
+-- AI 편성 기록: AI에 보낸 데이터, 도구 호출 과정, 결과를 남긴다(실명 없음).
+create table if not exists grouping_runs (
+  id uuid primary key default gen_random_uuid(),
+  model text not null,
+  sent_to_ai jsonb not null,
+  tool_log jsonb not null,
+  ai_groups jsonb not null,
+  ai_score integer not null,
+  baseline_score integer not null,
+  duration_ms integer not null,
+  created_at timestamptz not null default now()
+);
+
 alter table participants enable row level security;
 alter table birth_inputs enable row level security;
 alter table saju_results enable row level security;
+alter table grouping_runs enable row level security;
 
 -- 정책을 일부러 만들지 않는다: anon/authenticated 역할은 아무것도 할 수 없다.
 

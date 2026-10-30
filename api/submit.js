@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { computeSaju } from '../lib/saju.js';
 import { findIdealMatch } from '../lib/match.js';
 
-const CONSENT_VERSION = '2026-10-30-v4';
+const CONSENT_VERSION = '2026-10-30-v5';
 const LIBRARY_VERSIONS = { manseryeok: '2.0.0', 'lunar-javascript': '1.7.7' };
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
