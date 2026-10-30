@@ -35,6 +35,7 @@ create table if not exists saju_results (
   hour_pillar text,           -- 시각 미상이면 null
   day_master text not null,
   day_master_element text not null,
+  gender text not null check (gender in ('male', 'female')),  -- 이성 궁합과 밥조 편성용
   elements jsonb not null,    -- {"목":1,"화":3,"토":2,"금":2,"수":0}
   cross_check_ok boolean not null,
   cross_check_detail jsonb not null,
@@ -50,3 +51,7 @@ alter table saju_results enable row level security;
 
 -- 편성 완료 후 원본 생년월일을 지우는 쿼리(운영자가 SQL Editor에서 실행):
 -- delete from birth_inputs;
+
+-- 2026-10-30 변경: 테이블을 이미 만들었다면 아래 두 줄만 실행한다.
+-- delete from participants;  -- 성별 없는 테스트 데이터 정리
+-- alter table saju_results add column if not exists gender text not null check (gender in ('male', 'female'));

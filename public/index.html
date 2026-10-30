@@ -351,7 +351,20 @@
       background: var(--paper-deep); color: var(--ink);
     }
     .reasons b { color: var(--ink); }
-    .reasons li.warn .icon { background: #f3dcd6; color: var(--seal-deep); }
+    .pick-title { font-size: 15px; margin: 18px 0 10px; }
+    .picks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+    .picks li {
+      display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: center;
+      padding: 12px; border-radius: 14px; background: #fff; border: 1px solid var(--line);
+      font-size: 14.5px; color: var(--ink-soft);
+    }
+    .picks .char {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: grid; place-items: center; color: #fff;
+      font-family: "Noto Serif KR", serif; font-weight: 900; font-size: 19px;
+    }
+    .picks b { color: var(--ink); }
+    .picks small { display: block; font-size: 12.5px; color: var(--seal); margin-top: 2px; }
 
     .next {
       margin-top: 24px;
@@ -409,7 +422,7 @@
       </div>
 
       <div class="field">
-        <span class="title">성별 <small>이성 궁합 계산에만 쓰고 저장하지 않아요</small></span>
+        <span class="title">성별 <small>이성 궁합과 밥조 편성에 써요</small></span>
         <div class="segment" role="radiogroup" aria-label="성별">
           <input type="radio" name="gender" id="gender-female" value="female"><label for="gender-female">여자</label>
           <input type="radio" name="gender" id="gender-male" value="male"><label for="gender-male">남자</label>
@@ -432,7 +445,7 @@
       <div class="consent">
         <strong>개인정보 수집·이용 안내</strong>
         <ul>
-          <li>이름, 양력 생년월일, 태어난 시각(선택)을 사주 계산과 밥조 편성에만 써요. 성별은 이성 궁합 계산에만 쓰고 저장하지 않아요.</li>
+          <li>이름, 양력 생년월일, 태어난 시각(선택)을 사주 계산과 밥조 편성에만 써요. 성별은 이성 궁합과 밥조 편성에 써요.</li>
           <li>AI(Claude)에는 무작위 번호와 사주 결과만 보내고, 이름과 생년월일은 보내지 않아요.</li>
           <li>운영자만 볼 수 있고, 원본 생년월일은 편성 직후, 나머지는 프로젝트가 끝나면 삭제해요.</li>
         </ul>
@@ -481,52 +494,53 @@
       임: '넓은 바다처럼 시야가 넓은 자유로운 영혼', 계: '봄비처럼 조용히 스며드는 공감 능력자',
     };
 
-    const STEM_COLOR = { 목: '푸른', 화: '붉은', 토: '누런', 금: '하얀', 수: '검은' };
-    const ANIMAL = { 자: '쥐', 축: '소', 인: '호랑이', 묘: '토끼', 진: '용', 사: '뱀', 오: '말', 미: '양', 신: '원숭이', 유: '닭', 술: '개', 해: '돼지' };
-    // 받침 유무로 조사를 고른다. 예: josa('경', '과', '와') → '경과'
-    const josa = (word, withBatchim, without) => {
-      const code = word.charCodeAt(word.length - 1) - 0xac00;
-      return word + (code >= 0 && code % 28 ? withBatchim : without);
+    const ELEMENT_PERSON = {
+      목: ['나무', '새로운 걸 시작하고 함께 성장하길 좋아하는 사람'],
+      화: ['불', '밝고 열정적이라 분위기를 띄우는 사람'],
+      토: ['흙', '듬직하고 사람을 잘 챙기는 사람'],
+      금: ['쇠', '똑부러지고 맺고 끊음이 확실한 사람'],
+      수: ['물', '차분하고 생각이 깊은 사람'],
     };
 
     function renderMatch(data) {
       const m = data.match;
       if (!m) return;
-      const myStem = data.pillars.day[0];
-      const myBranch = data.pillars.day[1];
-      const myEl = data.dayMasterElement;
-      const lackingText = m.lacking.map((e) => HANJA[e]).join('·');
-      const fills = [m.stemElement, m.branchElement].filter((e) => m.lacking.includes(e));
-      const reasons = [
-        ['合', `${josa(myStem + myEl, '과', '와')} <b>${josa(m.stem + m.stemElement, '은', '는')} 천간합</b> 짝이에요. 서로 자연스럽게 끌리고 부족한 점을 채워줘요.`],
-        ['合', `내 일지 ${josa(myBranch, '과', '와')} <b>${josa(m.branch, '은', '는')} 육합</b>이라 생활 리듬과 대화 템포가 잘 맞아요.`],
-        [HANJA[m.lacking[0]], m.lackingCount === 0
-          ? `내 사주에 없는 <b>${lackingText} 기운</b>을 가진 사람과 함께하면 균형이 잡혀요.${fills.length ? ` ${m.pillar} 일주가 마침 그 기운을 갖고 있어요.` : ''}`
-          : `내게 적은 <b>${lackingText} 기운</b>이 강한 사람과 함께하면 균형이 잡혀요.${fills.length ? ` ${m.pillar} 일주가 마침 그 기운을 갖고 있어요.` : ''}`],
-      ];
-      if (m.spouse) {
-        const sp = m.spouse;
-        reasons.push(['緣', `${data.gender === 'male' ? '남자' : '여자'} 사주에서 연인을 뜻하는 <b>${sp.star}은 ${HANJA[sp.element]} 기운</b>이에요.${sp.matchHas ? ` ${m.pillar} 일주가 바로 이 기운이라 연애 궁합으로 특히 좋아요.` : ` ${HANJA[sp.element]} 기운이 강한 사람에게 끌리기 쉬워요.`}`]);
-      }
-      const warn = `일지가 <b>${m.clashBranch}(${ANIMAL[m.clashBranch]})</b>인 사람과는 부딪히기 쉬워요. 다툴 땐 한 템포 쉬어가 주세요.`;
+      const myType = DAY_MASTER_TEXT[data.dayMaster];
+      const last = myType.charCodeAt(myType.length - 1) - 0xac00;
+      const ending = last % 28 ? '이에요' : '예요';
+      const theirType = DAY_MASTER_TEXT[m.stem];
+
+      // 잘 맞는 기운: 연인 기운 → 내게 부족한 기운 → 찰떡 타입의 기운 순으로, 중복 없이
+      const picks = [];
+      const add = (el, why) => {
+        const found = picks.find((p) => p.el === el);
+        if (found) found.why.push(why); else picks.push({ el, why: [why] });
+      };
+      if (m.spouse) add(m.spouse.element, '연애운을 채워줘요');
+      m.lacking.forEach((el) => add(el, '나에게 부족한 기운이에요'));
+      add(m.stemElement, '찰떡 타입이 가진 기운이에요');
 
       document.getElementById('match').innerHTML = `
         <h3>나와 잘 맞는 이성</h3>
-        <p class="sub">일주로 본 연애 찰떡 궁합이에요</p>
+        <p class="sub">사주로 본 연애 찰떡 궁합이에요</p>
         <div class="match-hero">
-          <div class="chars">
-            <span class="char" style="background:${COLOR[m.stemElement]}">${m.stem}</span>
-            <span class="char" style="background:${COLOR[m.branchElement]}">${m.branch}</span>
-          </div>
+          <div class="chars"><span class="char" style="background:${COLOR[m.stemElement]}">${HANJA[m.stemElement]}</span></div>
           <div>
-            <div class="nick">${STEM_COLOR[m.stemElement]} ${ANIMAL[m.branch]}</div>
-            <div class="name">${m.pillar} 일주</div>
-            <p>${DAY_MASTER_TEXT[m.stem] ?? ''}</p>
+            <div class="nick">찰떡 궁합 타입</div>
+            <div class="name">${theirType}</div>
           </div>
         </div>
         <ul class="reasons">
-          ${reasons.map(([icon, text]) => `<li><span class="icon">${icon}</span><span>${text}</span></li>`).join('')}
-          <li class="warn"><span class="icon">沖</span><span>${warn}</span></li>
+          <li><span class="icon">心</span><span>나는 <b>${myType}</b>${ending}. 성향이 달라서 오히려 서로 끌리고, 서로의 빈 곳을 자연스럽게 채워줘요.</span></li>
+          <li><span class="icon">和</span><span>밥 먹는 속도, 연락 템포처럼 <b>생활 리듬이 잘 맞는</b> 편이라 오래 만나도 편해요.</span></li>
+        </ul>
+        <h4 class="pick-title">이런 기운을 가진 사람이 잘 맞아요</h4>
+        <ul class="picks">
+          ${picks.map(({ el, why }) => `
+            <li>
+              <span class="char" style="background:${COLOR[el]}">${HANJA[el]}</span>
+              <span><b>${ELEMENT_PERSON[el][0]} 기운</b> · ${ELEMENT_PERSON[el][1]}<small>${why.join(' · ')}</small></span>
+            </li>`).join('')}
         </ul>`;
     }
 
