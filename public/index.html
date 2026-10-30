@@ -258,6 +258,8 @@
     .result-head { text-align: center; margin-bottom: 22px; }
     .result-head .eyebrow { margin-bottom: 4px; letter-spacing: .08em; font-size: 14px; }
     .result-head h2 { font-size: 24px; }
+    .again[hidden] { display: none; }
+    .again { display: inline-block; margin: 0 0 10px; padding: 6px 12px; border-radius: 99px; background: var(--paper-deep); font-size: 13px; color: var(--ink-soft); }
 
     .pillars {
       display: grid;
@@ -422,7 +424,7 @@
       </div>
 
       <div class="field">
-        <span class="title">성별 <small>이성 궁합과 밥조 편성에 써요</small></span>
+        <span class="title">성별 <small>궁합 계산과 밥조 편성에 써요</small></span>
         <div class="segment" role="radiogroup" aria-label="성별">
           <input type="radio" name="gender" id="gender-female" value="female"><label for="gender-female">여자</label>
           <input type="radio" name="gender" id="gender-male" value="male"><label for="gender-male">남자</label>
@@ -445,7 +447,7 @@
       <div class="consent">
         <strong>개인정보 수집·이용 안내</strong>
         <ul>
-          <li>이름, 양력 생년월일, 태어난 시각(선택)을 사주 계산과 밥조 편성에만 써요. 성별은 이성 궁합과 밥조 편성에 써요.</li>
+          <li>이름, 양력 생년월일, 태어난 시각(선택)을 사주 계산과 밥조 편성에만 써요. 성별은 궁합 계산과 밥조 편성에 써요.</li>
           <li>AI(Claude)에는 무작위 번호와 사주 결과만 보내고, 이름과 생년월일은 보내지 않아요.</li>
           <li>운영자만 볼 수 있고, 원본 생년월일은 편성 직후, 나머지는 프로젝트가 끝나면 삭제해요.</li>
         </ul>
@@ -463,6 +465,7 @@
     <section class="card" id="result" aria-live="polite">
       <div class="result-head">
         <p class="eyebrow" id="result-name"></p>
+        <p class="again" id="again" hidden>이미 참여했어요. 처음 저장된 결과를 다시 보여드려요.</p>
         <h2>나의 사주 여덟 글자</h2>
       </div>
       <div class="pillars" id="pillars"></div>
@@ -634,6 +637,7 @@
     function renderResult(name, data) {
       form.hidden = true;
       document.getElementById('result-name').textContent = `${name} 님`;
+      document.getElementById('again').hidden = !data.alreadySubmitted;
 
       const order = [['hour', '시주'], ['day', '일주'], ['month', '월주'], ['year', '연주']];
       document.getElementById('pillars').innerHTML = order.map(([key, label], i) => {

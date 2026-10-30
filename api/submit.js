@@ -62,13 +62,19 @@ export default async function handler(req, res) {
     return bad(res, 400, '사주를 계산할 수 없는 날짜예요. 입력값을 확인해 주세요.');
   }
 
+  const existing = await findExisting(input.name, saju, input.gender);
+  if (existing.exists) {
+    if (existing.same) return sendResult(res, saju, input.gender, true);
+    return bad(res, 409, '같은 이름으로 이미 참여한 사람이 있어요. 본인이라면 처음 입력한 정보 그대로, 다른 사람이라면 이름 뒤에 숫자를 붙여 입력해 주세요.');
+  }
+
   const { data: participant, error: pErr } = await supabase
     .from('participants')
     .insert({ display_name: input.name, consent_at: new Date().toISOString(), consent_version: CONSENT_VERSION })
     .select('id')
     .single();
   if (pErr) {
-    if (pErr.code === '23505') return bad(res, 409, '이미 같은 이름으로 참여했어요. 수정이 필요하면 운영자에게 알려주세요.');
+    if (pErr.code === '23505') return bad(res, 409, '같은 이름으로 방금 다른 입력이 들어왔어요. 잠시 후 다시 시도해 주세요.');
     return bad(res, 500, '저장 중 문제가 생겼어요. 잠시 후 다시 시도해 주세요.');
   }
 
@@ -96,13 +102,38 @@ export default async function handler(req, res) {
     return bad(res, 500, '저장 중 문제가 생겼어요. 잠시 후 다시 시도해 주세요.');
   }
 
+  return sendResult(res, saju, input.gender, false);
+}
+
+function sendResult(res, saju, gender, alreadySubmitted) {
   return res.status(200).json({
     ok: true,
+    alreadySubmitted,
     pillars: saju.pillars,
     dayMaster: saju.dayMaster,
     dayMasterElement: saju.dayMasterElement,
     elements: saju.elements,
     timeKnown: saju.timeKnown,
-    match: findIdealMatch(saju, input.gender),
+    match: findIdealMatch(saju, gender),
   });
+}
+
+// 같은 이름이 이미 있으면 새로 저장하지 않는다. 입력한 사주와 성별이 저장된 것과 같을 때만
+// 본인으로 보고 결과를 다시 보여준다. 이름만으로 남의 사주를 볼 수 없게 하기 위해서다.
+async function findExisting(name, saju, gender) {
+  const { data: person } = await supabase
+    .from('participants').select('id').eq('display_name', name).maybeSingle();
+  if (!person) return { exists: false };
+  const { data: stored } = await supabase
+    .from('saju_results')
+    .select('year_pillar, month_pillar, day_pillar, hour_pillar, gender')
+    .eq('participant_id', person.id)
+    .maybeSingle();
+  const same = stored
+    && stored.year_pillar === saju.pillars.year
+    && stored.month_pillar === saju.pillars.month
+    && stored.day_pillar === saju.pillars.day
+    && stored.hour_pillar === saju.pillars.hour
+    && stored.gender === gender;
+  return { exists: true, same };
 }
