@@ -11,7 +11,7 @@
 | 사주 계산 | `lib/saju.js`: `manseryeok`로 계산, `lunar-javascript`로 교차검증 | 무료 |
 | 데이터베이스 | Supabase PostgreSQL, `supabase/schema.sql` | 무료 |
 | AI 편성 | `api/group.js`, `lib/agent.js`: Gemini 함수 호출 에이전트, `lib/compat.js`: 궁합 점수와 기준선 | 무료 등급 |
-| 결과 풀이 | `lib/reading.js`(성격·연애·재물·직업), `lib/match.js`(잘 맞는 이성), `lib/specials.js`(매력 지수·도화/홍염/역마/괴강·2027년 운세) | 무료 |
+| 결과 풀이 | `lib/reading.js`(성격·연애·재물·직업), `lib/match.js`(잘 맞는 이성), `lib/specials.js`(매력 지수·도화/홍염/역마/괴강·2027년 운세), `lib/character.js`(일주 동물 캐릭터) | 무료 |
 | 운영자 페이지 | `public/admin.html` | 무료 |
 
 처리 순서: 입력 → 초대코드·동의·입력값 검증 → 사주 계산(진태양시 보정) → 교차검증 → DB 저장 → 본인 사주만 화면에 표시.
