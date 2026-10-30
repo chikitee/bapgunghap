@@ -1,0 +1,18 @@
+{
+  "name": "saju-bapjo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "사주 기반 AI 밥조 편성 서비스",
+  "scripts": {
+    "crosscheck": "node scripts/crosscheck.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.117.3",
+    "lunar-javascript": "1.7.7",
+    "manseryeok": "2.0.0"
+  }
+}

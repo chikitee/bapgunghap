@@ -1,0 +1,54 @@
+# 밥궁합
+
+사주로 찾는 나와 잘 맞는 밥조. 학회원이 웹에서 생년월일을 입력하면 서버가 만세력으로 사주를 계산해 DB에 저장하고, 이후 AI(Claude)가 사주 결과만 보고 밥조를 편성한다.
+
+## 구조
+
+| 구성 | 사용 기술 | 비용 |
+| --- | --- | --- |
+| 입력 페이지 | `public/index.html` (HTML/CSS/JS) | 무료 |
+| 서버 함수 | `api/submit.js` (Vercel Functions, Node 18+) | 무료 |
+| 사주 계산 | `lib/saju.js`: `manseryeok`로 계산, `lunar-javascript`로 교차검증 | 무료 |
+| 데이터베이스 | Supabase PostgreSQL, `supabase/schema.sql` | 무료 |
+
+처리 순서: 입력 → 초대코드·동의·입력값 검증 → 사주 계산(진태양시 보정) → 교차검증 → DB 저장 → 본인 사주만 화면에 표시.
+
+## 보안 설계 요약
+
+- **최소 수집과 동의**: 이름(닉네임), 양력 생년월일, 시각(선택)만 받고, 제출 전에 동의를 받는다. 동의 시각과 문구 버전을 저장한다.
+- **가명 처리**: 신원(`participants`), 원본 생년월일(`birth_inputs`), 사주 결과(`saju_results`)를 테이블로 나누고 무작위 UUID로만 잇는다.
+- **접근 통제**: 세 테이블 모두 RLS를 켜고 정책을 두지 않는다. 브라우저용 공개 키로는 아무것도 읽거나 쓸 수 없고, 서버 함수의 `service_role` 키로만 접근한다. 이 키는 Vercel 환경변수에만 둔다.
+- **AI 전송 최소화**: AI에는 `saju_results`만 넘긴다.
+- **악용 방지**: 초대코드, 봇용 숨김 필드, 같은 이름 중복 차단.
+- **보관 기간**: 편성 직후 `delete from birth_inputs;`로 원본 생년월일을 삭제하고, 프로젝트가 끝나면 전부 삭제한다.
+- **계산 정확성**: 두 라이브러리 결과가 다르면 `cross_check_ok = false`로 표시한다. `npm run crosscheck`로 대량 검증(2026-10-30 기준 5,000건 100% 일치).
+- **공급망**: 라이브러리 버전을 고정하고 `npm audit`으로 점검한다(2026-10-30 기준 취약점 0건).
+
+## 공개 저장소 보안 원칙
+
+- 비밀값(Supabase 키, Claude API 키, 초대코드)은 Vercel 환경변수에만 둔다. `.env*`는 `.gitignore`로 막는다.
+- 비밀값을 실수로 커밋하면 커밋 삭제로 끝내지 않고 즉시 키를 재발급한다.
+- 실제 참여자 데이터와 그 데이터가 보이는 스크린샷은 저장소에 올리지 않는다. 테스트에는 가상 데이터만 쓴다.
+
+## 배포 방법
+
+1. **GitHub**: 새 공개 저장소를 만들고 이 폴더를 올린다.
+2. **Supabase** (supabase.com, GitHub로 가입)
+   - New project 생성, 리전은 Seoul(ap-northeast-2).
+   - SQL Editor에서 `supabase/schema.sql` 전체를 실행.
+   - Project Settings > API에서 `Project URL`과 `service_role` 키를 복사.
+3. **Vercel** (vercel.com, GitHub로 가입)
+   - Add New > Project에서 GitHub 저장소를 가져온다. Framework Preset은 `Other`.
+   - Environment Variables에 다음 세 개를 넣고 Deploy.
+     - `SUPABASE_URL`: Supabase Project URL
+     - `SUPABASE_SERVICE_ROLE_KEY`: Supabase service_role 키
+     - `INVITE_CODE`: 아무도 추측 못 할 문자열(예: `bap-7Kq2xZ`)
+4. 학회원에게 `https://<배포주소>/?code=<INVITE_CODE>` 링크를 보낸다.
+
+## 로컬 검증
+
+```bash
+npm install
+npm run crosscheck
+npm audit
+```

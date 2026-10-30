@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>밥궁합 · 사주로 찾는 나와 잘 맞는 밥조</title>
+  <meta name="description" content="생년월일을 입력하면 사주를 풀어 나와 기운이 잘 맞는 밥조를 짜드려요.">
+  <meta name="theme-color" content="#f4efe4">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Serif+KR:wght@600;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css">
+  <style>
+    :root {
+      --paper: #f4efe4;
+      --paper-deep: #ebe3d2;
+      --card: #fbf8f1;
+      --ink: #1f1c18;
+      --ink-soft: #5b544a;
+      --ink-faint: #8f877a;
+      --line: #d9cfbb;
+      --seal: #b23a2b;
+      --seal-deep: #8e2c20;
+      --wood: #4f7a52;
+      --fire: #c2462f;
+      --earth: #b88a3e;
+      --metal: #8a8f96;
+      --water: #2f4a6b;
+      --radius: 18px;
+      --shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 18px 40px -24px rgba(60,40,10,.35);
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(1200px 600px at 85% -10%, rgba(178,58,43,.07), transparent 60%),
+        radial-gradient(900px 500px at -10% 110%, rgba(47,74,107,.07), transparent 60%),
+        var(--paper);
+      color: var(--ink);
+      font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      word-break: keep-all;
+    }
+    /* 한지 결 */
+    body::before {
+      content: "";
+      position: fixed; inset: 0;
+      pointer-events: none;
+      opacity: .35;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .38 0 0 0 0 .28 0 0 0 .18 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    main {
+      position: relative;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 48px 20px 72px;
+    }
+
+    /* 머리 */
+    .hero { text-align: center; margin-bottom: 32px; }
+    .seal {
+      display: inline-grid; place-items: center;
+      width: 64px; height: 64px;
+      border-radius: 14px;
+      background: var(--seal);
+      color: #fbefe6;
+      font-family: "Noto Serif KR", serif;
+      font-weight: 900;
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: -.02em;
+      box-shadow: 0 10px 24px -12px rgba(142,44,32,.8);
+      transform: rotate(-4deg);
+      margin-bottom: 20px;
+    }
+    .seal span { display: block; writing-mode: vertical-rl; }
+    .eyebrow {
+      font-size: 13px; letter-spacing: .32em;
+      color: var(--ink-faint);
+      margin: 0 0 6px;
+    }
+    h1 {
+      font-family: "Noto Serif KR", serif;
+      font-weight: 900;
+      font-size: clamp(44px, 13vw, 60px);
+      line-height: 1.05;
+      letter-spacing: -.03em;
+      margin: 0;
+    }
+    .subtitle {
+      font-family: "Gowun Batang", serif;
+      font-size: 17px;
+      color: var(--ink-soft);
+      margin: 12px 0 0;
+    }
+    .elements-strip {
+      display: flex; justify-content: center; gap: 8px;
+      margin-top: 22px;
+    }
+    .el-chip {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-family: "Noto Serif KR", serif;
+      font-weight: 600;
+      font-size: 14px;
+      color: #fff;
+    }
+
+    /* 카드 */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px 22px;
+    }
+    .card + .card { margin-top: 16px; }
+    .card h2 {
+      font-family: "Gowun Batang", serif;
+      font-size: 20px;
+      margin: 0 0 4px;
+    }
+    .card .lead { color: var(--ink-soft); font-size: 14.5px; margin: 0 0 22px; }
+
+    .field { margin-bottom: 20px; }
+    label.title {
+      display: flex; align-items: baseline; gap: 6px;
+      font-weight: 600; font-size: 15px;
+      margin-bottom: 8px;
+    }
+    label.title small { color: var(--ink-faint); font-weight: 400; font-size: 13px; }
+    input[type=text], input[type=date], input[type=time] {
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+      font: inherit;
+      font-size: 17px;
+      color: var(--ink);
+      background: #fff;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 13px 14px;
+      min-height: 52px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--ink);
+      box-shadow: 0 0 0 4px rgba(31,28,24,.08);
+    }
+    input:disabled { background: var(--paper-deep); color: var(--ink-faint); }
+    .hint { font-size: 13px; color: var(--ink-faint); margin-top: 8px; }
+    .hint a { color: var(--water); }
+
+    .check {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 10px;
+      font-size: 14.5px;
+      color: var(--ink-soft);
+      cursor: pointer;
+      user-select: none;
+    }
+    .check input {
+      appearance: none; -webkit-appearance: none;
+      width: 22px; height: 22px; margin: 0;
+      flex: none;
+      border: 1.5px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      display: grid; place-items: center;
+      cursor: pointer;
+    }
+    .check input:checked { background: var(--ink); border-color: var(--ink); }
+    .check input:checked::after {
+      content: ""; width: 10px; height: 6px;
+      border: 2px solid #fff; border-top: 0; border-right: 0;
+      transform: translateY(-1px) rotate(-45deg);
+    }
+
+    .consent {
+      background: var(--paper);
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      margin: 8px 0 20px;
+    }
+    .consent summary {
+      cursor: pointer;
+      font-weight: 600; font-size: 14.5px;
+      list-style: none;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .consent summary::-webkit-details-marker { display: none; }
+    .consent summary::after { content: "자세히"; font-weight: 400; font-size: 13px; color: var(--ink-faint); }
+    .consent[open] summary::after { content: "접기"; }
+    .consent dl { margin: 14px 0 0; font-size: 13.5px; color: var(--ink-soft); }
+    .consent dt { font-weight: 600; color: var(--ink); margin-top: 10px; }
+    .consent dt:first-child { margin-top: 0; }
+    .consent dd { margin: 2px 0 0; }
+    .consent .check { margin-top: 14px; color: var(--ink); font-weight: 500; }
+
+    .btn {
+      width: 100%;
+      min-height: 56px;
+      border: 0;
+      border-radius: 14px;
+      background: var(--ink);
+      color: var(--paper);
+      font: inherit;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      cursor: pointer;
+      transition: transform .1s, background .2s, opacity .2s;
+    }
+    .btn:hover { background: #000; }
+    .btn:active { transform: scale(.985); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(244,239,228,.35); border-top-color: var(--paper);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      vertical-align: -3px; margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error {
+      display: none;
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #f8e5df;
+      color: var(--seal-deep);
+      font-size: 14px;
+    }
+    .error.show { display: block; }
+
+    .notice {
+      text-align: center;
+      padding: 36px 22px;
+    }
+    .notice p { color: var(--ink-soft); margin: 8px 0 0; }
+
+    /* 결과 */
+    #result { display: none; }
+    #result.show { display: block; animation: rise .6s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+    .result-head { text-align: center; margin-bottom: 22px; }
+    .result-head .eyebrow { margin-bottom: 4px; letter-spacing: .08em; font-size: 14px; }
+    .result-head h2 { font-size: 24px; }
+
+    .pillars {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .pillar {
+      text-align: center;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 10px 4px 12px;
+      opacity: 0;
+      animation: rise .5s cubic-bezier(.2,.8,.2,1) forwards;
+    }
+    .pillar .label { font-size: 12px; color: var(--ink-faint); }
+    .pillar .chars {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      margin-top: 8px;
+    }
+    .pillar .char {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: grid; place-items: center;
+      color: #fff;
+      font-family: "Noto Serif KR", serif;
+      font-weight: 900;
+      font-size: 22px;
+    }
+    .pillar.me { border-color: var(--seal); box-shadow: 0 0 0 3px rgba(178,58,43,.12); }
+    .pillar.unknown .char { background: var(--paper-deep) !important; color: var(--ink-faint); font-size: 16px; }
+
+    .daymaster {
+      display: flex; gap: 14px; align-items: center;
+      padding: 16px;
+      border-radius: 14px;
+      background: var(--paper);
+      margin-bottom: 22px;
+    }
+    .daymaster .big {
+      flex: none;
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      display: grid; place-items: center;
+      color: #fff;
+      font-family: "Noto Serif KR", serif;
+      font-weight: 900; font-size: 28px;
+    }
+    .daymaster p { margin: 0; font-size: 14.5px; color: var(--ink-soft); }
+    .daymaster strong { color: var(--ink); font-size: 16px; display: block; margin-bottom: 2px; }
+
+    .bars h3 { font-size: 15px; margin: 0 0 12px; }
+    .bar { display: grid; grid-template-columns: 36px 1fr 24px; align-items: center; gap: 10px; margin-bottom: 9px; }
+    .bar .name { font-family: "Noto Serif KR", serif; font-weight: 600; }
+    .bar .track { height: 12px; border-radius: 99px; background: var(--paper-deep); overflow: hidden; }
+    .bar .fill { height: 100%; width: 0; border-radius: 99px; transition: width 1s cubic-bezier(.2,.8,.2,1); }
+    .bar .count { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-soft); font-size: 14px; }
+
+    .next {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px dashed var(--line);
+      text-align: center;
+      font-family: "Gowun Batang", serif;
+      color: var(--ink-soft);
+    }
+    .next b { color: var(--ink); }
+
+    footer {
+      text-align: center;
+      font-size: 12.5px;
+      color: var(--ink-faint);
+      margin-top: 28px;
+    }
+
+    .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .pillar { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <div class="seal" aria-hidden="true"><span>궁합</span></div>
+      <p class="eyebrow">사주 밥조 편성</p>
+      <h1>밥궁합</h1>
+      <p class="subtitle">사주로 찾는 나와 잘 맞는 밥조</p>
+      <div class="elements-strip" aria-hidden="true">
+        <span class="el-chip" style="background:var(--wood)">木</span>
+        <span class="el-chip" style="background:var(--fire)">火</span>
+        <span class="el-chip" style="background:var(--earth)">土</span>
+        <span class="el-chip" style="background:var(--metal)">金</span>
+        <span class="el-chip" style="background:var(--water)">水</span>
+      </div>
+    </header>
+
+    <section class="card notice" id="no-invite" hidden>
+      <h2>초대 링크로 들어와 주세요</h2>
+      <p>밥궁합은 초대받은 사람만 참여할 수 있어요.<br>운영진에게 받은 링크를 다시 눌러주세요.</p>
+    </section>
+
+    <form class="card" id="form" novalidate hidden>
+      <h2>내 사주 입력하기</h2>
+      <p class="lead">입력한 정보로 사주를 풀고, 기운이 잘 어울리는 사람끼리 밥조를 짜드려요.</p>
+
+      <div class="field">
+        <label class="title" for="name">이름 <small>닉네임도 괜찮아요</small></label>
+        <input type="text" id="name" name="name" maxlength="20" autocomplete="nickname" placeholder="예: 김치연" required>
+      </div>
+
+      <div class="field">
+        <label class="title" for="birthDate">생년월일 <small>양력</small></label>
+        <input type="date" id="birthDate" name="birthDate" min="1900-01-01" required>
+        <p class="hint">음력 생일만 알고 있다면 <a href="https://astro.kasi.re.kr/life/pageView/8" target="_blank" rel="noopener">한국천문연구원 음양력 변환</a>에서 양력으로 바꿔 입력해 주세요.</p>
+      </div>
+
+      <div class="field">
+        <label class="title" for="birthTime">태어난 시각 <small>선택</small></label>
+        <input type="time" id="birthTime" name="birthTime">
+        <label class="check"><input type="checkbox" id="timeUnknown"> 태어난 시각을 몰라요</label>
+        <p class="hint">시각을 알면 여덟 글자 모두로, 모르면 여섯 글자로 풀어요.</p>
+      </div>
+
+      <details class="consent">
+        <summary>개인정보 수집·이용 안내</summary>
+        <dl>
+          <dt>수집 항목</dt>
+          <dd>이름(닉네임), 양력 생년월일, 태어난 시각(선택)</dd>
+          <dt>이용 목적</dt>
+          <dd>사주 계산과 밥조 편성. 다른 목적으로 쓰지 않아요.</dd>
+          <dt>AI 활용</dt>
+          <dd>밥조 편성에 AI(Claude)를 써요. AI에는 무작위 번호와 사주 결과만 보내고, 이름과 생년월일은 보내지 않아요.</dd>
+          <dt>보관 기간</dt>
+          <dd>원본 생년월일은 밥조 편성 직후, 나머지 정보는 프로젝트가 끝나면 모두 삭제해요.</dd>
+          <dt>열람 권한</dt>
+          <dd>운영자만 볼 수 있어요. 다른 참여자는 내 정보를 볼 수 없어요.</dd>
+        </dl>
+        <label class="check"><input type="checkbox" id="consent" required> 위 내용을 확인했고 동의해요</label>
+      </details>
+
+      <div class="hp" aria-hidden="true">
+        <label>웹사이트 <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+      </div>
+
+      <button class="btn" type="submit" id="submit" disabled>내 사주 풀어보기</button>
+      <div class="error" id="error" role="alert"></div>
+    </form>
+
+    <section class="card" id="result" aria-live="polite">
+      <div class="result-head">
+        <p class="eyebrow" id="result-name"></p>
+        <h2>나의 사주 여덟 글자</h2>
+      </div>
+      <div class="pillars" id="pillars"></div>
+      <div class="daymaster" id="daymaster"></div>
+      <div class="bars">
+        <h3>나의 오행 분포</h3>
+        <div id="bars"></div>
+      </div>
+      <p class="next">입력 완료! 모두 입력하면<br><b>AI가 기운이 잘 맞는 밥조</b>를 짜서 알려드릴게요.</p>
+    </section>
+
+    <footer>밥궁합 · 입력한 정보는 밥조 편성에만 쓰이고 끝나면 삭제돼요</footer>
+  </main>
+
+  <script>
+    const ELEMENT_OF = {
+      갑: '목', 을: '목', 병: '화', 정: '화', 무: '토', 기: '토', 경: '금', 신: '금', 임: '수', 계: '수',
+      인: '목', 묘: '목', 사: '화', 오: '화', 진: '토', 술: '토', 축: '토', 미: '토', 유: '금', 해: '수', 자: '수',
+    };
+    // 지지 '신(申)'은 금, 천간 '신(辛)'도 금이라 같은 글자로 처리해도 결과가 같다.
+    const COLOR = { 목: 'var(--wood)', 화: 'var(--fire)', 토: 'var(--earth)', 금: 'var(--metal)', 수: 'var(--water)' };
+    const HANJA = { 목: '木', 화: '火', 토: '土', 금: '金', 수: '水' };
+    const DAY_MASTER_TEXT = {
+      갑: '곧게 뻗는 큰 나무처럼 앞장서는 리더형', 을: '덩굴처럼 유연하게 어울리는 친화형',
+      병: '한낮의 태양처럼 밝고 에너지가 넘치는 분위기 메이커', 정: '촛불처럼 따뜻하게 곁을 밝혀주는 다정형',
+      무: '큰 산처럼 듬직하게 중심을 잡는 든든형', 기: '기름진 밭처럼 사람을 품고 챙기는 살림꾼',
+      경: '단단한 바위처럼 결단력 있는 해결사', 신: '빛나는 보석처럼 섬세하고 감각적인 완벽주의자',
+      임: '넓은 바다처럼 시야가 넓은 자유로운 영혼', 계: '봄비처럼 조용히 스며드는 공감 능력자',
+    };
+
+    const params = new URLSearchParams(location.search);
+    const inviteCode = params.get('code');
+    const form = document.getElementById('form');
+    const submitBtn = document.getElementById('submit');
+    const errorBox = document.getElementById('error');
+    const timeInput = document.getElementById('birthTime');
+    const timeUnknown = document.getElementById('timeUnknown');
+    const consent = document.getElementById('consent');
+
+    if (!inviteCode) {
+      document.getElementById('no-invite').hidden = false;
+    } else {
+      form.hidden = false;
+    }
+    document.getElementById('birthDate').max = new Date().toISOString().slice(0, 10);
+
+    function refreshButton() {
+      const ready = form.name.value.trim() && form.birthDate.value && consent.checked
+        && (timeUnknown.checked || timeInput.value);
+      submitBtn.disabled = !ready;
+    }
+    form.addEventListener('input', refreshButton);
+    form.addEventListener('change', refreshButton);
+    timeUnknown.addEventListener('change', () => {
+      timeInput.disabled = timeUnknown.checked;
+      if (timeUnknown.checked) timeInput.value = '';
+      refreshButton();
+    });
+    consent.addEventListener('change', () => { if (consent.checked) consent.closest('details').open = false; });
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.classList.add('show');
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBox.classList.remove('show');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span>사주를 푸는 중';
+      try {
+        const res = await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: form.name.value.trim(),
+            birthDate: form.birthDate.value,
+            birthTime: timeUnknown.checked ? null : timeInput.value,
+            consent: consent.checked,
+            inviteCode,
+            website: form.website.value,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || '잠시 후 다시 시도해 주세요.');
+        renderResult(form.name.value.trim(), data);
+      } catch (err) {
+        showError(err.message);
+        submitBtn.textContent = '내 사주 풀어보기';
+        refreshButton();
+      }
+    });
+
+    function renderResult(name, data) {
+      form.hidden = true;
+      document.getElementById('result-name').textContent = `${name} 님`;
+
+      const order = [['hour', '시주'], ['day', '일주'], ['month', '월주'], ['year', '연주']];
+      document.getElementById('pillars').innerHTML = order.map(([key, label], i) => {
+        const p = data.pillars[key];
+        const cls = ['pillar', key === 'day' ? 'me' : '', p ? '' : 'unknown'].join(' ');
+        const chars = p
+          ? [...p].map((c) => `<span class="char" style="background:${COLOR[ELEMENT_OF[c]]}">${c}</span>`).join('')
+          : '<span class="char">?</span><span class="char">?</span>';
+        return `<div class="${cls}" style="animation-delay:${i * 120}ms"><div class="label">${label}${key === 'day' ? ' · 나' : ''}</div><div class="chars">${chars}</div></div>`;
+      }).join('');
+
+      const dm = data.dayMaster;
+      const el = data.dayMasterElement;
+      document.getElementById('daymaster').innerHTML = `
+        <div class="big" style="background:${COLOR[el]}">${dm}</div>
+        <div><strong>${dm}${el} 일간 · ${HANJA[el]}의 기운</strong><p>${DAY_MASTER_TEXT[dm] ?? ''}</p></div>`;
+
+      const max = Math.max(...Object.values(data.elements), 1);
+      document.getElementById('bars').innerHTML = Object.entries(data.elements).map(([k, v]) => `
+        <div class="bar"><span class="name" style="color:${COLOR[k]}">${HANJA[k]}</span>
+        <div class="track"><div class="fill" data-w="${(v / max) * 100}" style="background:${COLOR[k]}"></div></div>
+        <span class="count">${v}</span></div>`).join('');
+
+      const result = document.getElementById('result');
+      result.classList.add('show');
+      result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      requestAnimationFrame(() => setTimeout(() => {
+        document.querySelectorAll('.bar .fill').forEach((f) => { f.style.width = `${f.dataset.w}%`; });
+      }, 300));
+    }
+  </script>
+</body>
+</html>
