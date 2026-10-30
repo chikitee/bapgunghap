@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { computeSaju } from '../lib/saju.js';
 import { findIdealMatch } from '../lib/match.js';
 
-const CONSENT_VERSION = '2026-10-30-v2';
+const CONSENT_VERSION = '2026-10-30-v3';
 const LIBRARY_VERSIONS = { manseryeok: '2.0.0', 'lunar-javascript': '1.7.7' };
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -18,6 +18,9 @@ function bad(res, status, message) {
 function parseInput(body) {
   const name = String(body.name ?? '').trim();
   if (name.length < 1 || name.length > 20) return { error: '이름(닉네임)은 1~20자로 입력해 주세요.' };
+
+  const gender = body.gender;
+  if (gender !== 'male' && gender !== 'female') return { error: '성별을 선택해 주세요.' };
 
   const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(body.birthDate ?? ''));
   if (!dateMatch) return { error: '생년월일을 다시 확인해 주세요.' };
@@ -34,7 +37,7 @@ function parseInput(body) {
     if (!t || Number(t[1]) > 23 || Number(t[2]) > 59) return { error: '태어난 시각을 다시 확인해 주세요.' };
     [hour, minute] = [Number(t[1]), Number(t[2])];
   }
-  return { name, year, month, day, hour, minute, birthDate: dateMatch[0], birthTime: body.birthTime || null };
+  return { name, gender, year, month, day, hour, minute, birthDate: dateMatch[0], birthTime: body.birthTime || null };
 }
 
 export default async function handler(req, res) {
@@ -99,6 +102,6 @@ export default async function handler(req, res) {
     dayMasterElement: saju.dayMasterElement,
     elements: saju.elements,
     timeKnown: saju.timeKnown,
-    match: findIdealMatch(saju),
+    match: findIdealMatch(saju, input.gender),
   });
 }

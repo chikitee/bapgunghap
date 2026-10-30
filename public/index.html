@@ -127,12 +127,12 @@
     .card .lead { color: var(--ink-soft); font-size: 14.5px; margin: 0 0 22px; }
 
     .field { margin-bottom: 20px; }
-    label.title {
+    .title {
       display: flex; align-items: baseline; gap: 6px;
       font-weight: 600; font-size: 15px;
       margin-bottom: 8px;
     }
-    label.title small { color: var(--ink-faint); font-weight: 400; font-size: 13px; }
+    .title small { color: var(--ink-faint); font-weight: 400; font-size: 13px; }
     input[type=text], input[type=date], input[type=time] {
       width: 100%;
       appearance: none;
@@ -153,6 +153,20 @@
       box-shadow: 0 0 0 4px rgba(31,28,24,.08);
     }
     input:disabled { background: var(--paper-deep); color: var(--ink-faint); }
+    .segment { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .segment input { position: absolute; opacity: 0; pointer-events: none; }
+    .segment label {
+      display: grid; place-items: center;
+      min-height: 52px;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      font-size: 16px; font-weight: 600; color: var(--ink-soft);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .segment input:checked + label { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+    .segment input:focus-visible + label { box-shadow: 0 0 0 4px rgba(31,28,24,.12); }
     .hint { font-size: 13px; color: var(--ink-faint); margin-top: 8px; }
     .hint a { color: var(--water); }
 
@@ -395,6 +409,14 @@
       </div>
 
       <div class="field">
+        <span class="title">성별 <small>이성 궁합 계산에만 쓰고 저장하지 않아요</small></span>
+        <div class="segment" role="radiogroup" aria-label="성별">
+          <input type="radio" name="gender" id="gender-female" value="female"><label for="gender-female">여자</label>
+          <input type="radio" name="gender" id="gender-male" value="male"><label for="gender-male">남자</label>
+        </div>
+      </div>
+
+      <div class="field">
         <label class="title" for="birthDate">생년월일 <small>양력</small></label>
         <input type="text" id="birthDate" name="birthDate" inputmode="numeric" autocomplete="off" placeholder="예: 20020201" maxlength="10" required>
         <p class="hint">음력 생일만 알고 있다면 <a href="https://astro.kasi.re.kr/life/pageView/8" target="_blank" rel="noopener">한국천문연구원 음양력 변환</a>에서 양력으로 바꿔 입력해 주세요.</p>
@@ -410,7 +432,7 @@
       <div class="consent">
         <strong>개인정보 수집·이용 안내</strong>
         <ul>
-          <li>이름, 양력 생년월일, 태어난 시각(선택)을 사주 계산과 밥조 편성에만 써요.</li>
+          <li>이름, 양력 생년월일, 태어난 시각(선택)을 사주 계산과 밥조 편성에만 써요. 성별은 이성 궁합 계산에만 쓰고 저장하지 않아요.</li>
           <li>AI(Claude)에는 무작위 번호와 사주 결과만 보내고, 이름과 생년월일은 보내지 않아요.</li>
           <li>운영자만 볼 수 있고, 원본 생년월일은 편성 직후, 나머지는 프로젝트가 끝나면 삭제해요.</li>
         </ul>
@@ -482,11 +504,15 @@
           ? `내 사주에 없는 <b>${lackingText} 기운</b>을 가진 사람과 함께하면 균형이 잡혀요.${fills.length ? ` ${m.pillar} 일주가 마침 그 기운을 갖고 있어요.` : ''}`
           : `내게 적은 <b>${lackingText} 기운</b>이 강한 사람과 함께하면 균형이 잡혀요.${fills.length ? ` ${m.pillar} 일주가 마침 그 기운을 갖고 있어요.` : ''}`],
       ];
-      const warn = `일지가 <b>${m.clashBranch}(${ANIMAL[m.clashBranch]})</b>인 사람과는 부딪히기 쉬워요. 만나면 한 템포 쉬어가 주세요.`;
+      if (m.spouse) {
+        const sp = m.spouse;
+        reasons.push(['緣', `${data.gender === 'male' ? '남자' : '여자'} 사주에서 연인을 뜻하는 <b>${sp.star}은 ${HANJA[sp.element]} 기운</b>이에요.${sp.matchHas ? ` ${m.pillar} 일주가 바로 이 기운이라 연애 궁합으로 특히 좋아요.` : ` ${HANJA[sp.element]} 기운이 강한 사람에게 끌리기 쉬워요.`}`]);
+      }
+      const warn = `일지가 <b>${m.clashBranch}(${ANIMAL[m.clashBranch]})</b>인 사람과는 부딪히기 쉬워요. 다툴 땐 한 템포 쉬어가 주세요.`;
 
       document.getElementById('match').innerHTML = `
-        <h3>나와 잘 맞는 사람</h3>
-        <p class="sub">일주로 본 찰떡 궁합이에요</p>
+        <h3>나와 잘 맞는 이성</h3>
+        <p class="sub">일주로 본 연애 찰떡 궁합이에요</p>
         <div class="match-hero">
           <div class="chars">
             <span class="char" style="background:${COLOR[m.stemElement]}">${m.stem}</span>
@@ -545,7 +571,7 @@
     }
 
     function refreshButton() {
-      const ready = form.name.value.trim() && parseDate(dateInput.value) && consent.checked
+      const ready = form.name.value.trim() && form.gender.value && parseDate(dateInput.value) && consent.checked
         && (timeUnknown.checked || parseTime(timeInput.value));
       submitBtn.disabled = !ready;
     }
@@ -573,6 +599,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: form.name.value.trim(),
+            gender: form.gender.value,
             birthDate: parseDate(dateInput.value),
             birthTime: timeUnknown.checked ? null : parseTime(timeInput.value),
             consent: consent.checked,
@@ -616,7 +643,7 @@
         <div class="track"><div class="fill" data-w="${(v / max) * 100}" style="background:${COLOR[k]}"></div></div>
         <span class="count">${v}</span></div>`).join('');
 
-      renderMatch(data);
+      renderMatch({ ...data, gender: form.gender.value });
 
       const result = document.getElementById('result');
       result.classList.add('show');
