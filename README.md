@@ -42,7 +42,7 @@
    - Environment Variables에 다음 세 개를 넣고 Deploy.
      - `SUPABASE_URL`: Supabase Project URL
      - `SUPABASE_SERVICE_ROLE_KEY`: Supabase service_role 키
-     - `INVITE_CODE`: 아무도 추측 못 할 문자열(예: `bap-7Kq2xZ`)
+     - `INVITE_CODE`: 아무도 추측 못 할 무작위 문자열(저장소에 적지 않는다)
 4. 학회원에게 `https://<배포주소>/?code=<INVITE_CODE>` 링크를 보낸다.
 
 ## 로컬 검증
