@@ -303,6 +303,42 @@
     .bar .fill { height: 100%; width: 0; border-radius: 99px; transition: width 1s cubic-bezier(.2,.8,.2,1); }
     .bar .count { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-soft); font-size: 14px; }
 
+    .match { margin-top: 26px; padding-top: 22px; border-top: 1px dashed var(--line); }
+    .match h3 { font-family: "Gowun Batang", serif; font-size: 19px; margin: 0 0 4px; text-align: center; }
+    .match .sub { text-align: center; font-size: 13.5px; color: var(--ink-faint); margin: 0 0 18px; }
+    .match-hero {
+      display: flex; align-items: center; gap: 16px;
+      padding: 18px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #fff, var(--paper));
+      border: 1px solid var(--line);
+      margin-bottom: 16px;
+    }
+    .match-hero .chars { display: flex; flex-direction: column; gap: 6px; flex: none; }
+    .match-hero .char {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: grid; place-items: center;
+      color: #fff; font-family: "Noto Serif KR", serif; font-weight: 900; font-size: 24px;
+    }
+    .match-hero .name { font-family: "Noto Serif KR", serif; font-weight: 900; font-size: 22px; line-height: 1.2; }
+    .match-hero .nick { font-size: 13px; color: var(--seal); font-weight: 600; margin-bottom: 4px; }
+    .match-hero p { margin: 6px 0 0; font-size: 14px; color: var(--ink-soft); }
+    .reasons { list-style: none; margin: 0; padding: 0; }
+    .reasons li {
+      display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start;
+      font-size: 14.5px; color: var(--ink-soft);
+      padding: 10px 0;
+    }
+    .reasons li + li { border-top: 1px solid var(--paper-deep); }
+    .reasons .icon {
+      width: 28px; height: 28px; border-radius: 8px;
+      display: grid; place-items: center;
+      font-family: "Noto Serif KR", serif; font-weight: 900; font-size: 13px;
+      background: var(--paper-deep); color: var(--ink);
+    }
+    .reasons b { color: var(--ink); }
+    .reasons li.warn .icon { background: #f3dcd6; color: var(--seal-deep); }
+
     .next {
       margin-top: 24px;
       padding-top: 20px;
@@ -400,6 +436,7 @@
         <h3>나의 오행 분포</h3>
         <div id="bars"></div>
       </div>
+      <div class="match" id="match"></div>
       <p class="next">입력 완료! 모두 입력하면<br><b>AI가 기운이 잘 맞는 밥조</b>를 짜서 알려드릴게요.</p>
     </section>
 
@@ -421,6 +458,51 @@
       경: '단단한 바위처럼 결단력 있는 해결사', 신: '빛나는 보석처럼 섬세하고 감각적인 완벽주의자',
       임: '넓은 바다처럼 시야가 넓은 자유로운 영혼', 계: '봄비처럼 조용히 스며드는 공감 능력자',
     };
+
+    const STEM_COLOR = { 목: '푸른', 화: '붉은', 토: '누런', 금: '하얀', 수: '검은' };
+    const ANIMAL = { 자: '쥐', 축: '소', 인: '호랑이', 묘: '토끼', 진: '용', 사: '뱀', 오: '말', 미: '양', 신: '원숭이', 유: '닭', 술: '개', 해: '돼지' };
+    // 받침 유무로 조사를 고른다. 예: josa('경', '과', '와') → '경과'
+    const josa = (word, withBatchim, without) => {
+      const code = word.charCodeAt(word.length - 1) - 0xac00;
+      return word + (code >= 0 && code % 28 ? withBatchim : without);
+    };
+
+    function renderMatch(data) {
+      const m = data.match;
+      if (!m) return;
+      const myStem = data.pillars.day[0];
+      const myBranch = data.pillars.day[1];
+      const myEl = data.dayMasterElement;
+      const lackingText = m.lacking.map((e) => HANJA[e]).join('·');
+      const fills = [m.stemElement, m.branchElement].filter((e) => m.lacking.includes(e));
+      const reasons = [
+        ['合', `${josa(myStem + myEl, '과', '와')} <b>${josa(m.stem + m.stemElement, '은', '는')} 천간합</b> 짝이에요. 서로 자연스럽게 끌리고 부족한 점을 채워줘요.`],
+        ['合', `내 일지 ${josa(myBranch, '과', '와')} <b>${josa(m.branch, '은', '는')} 육합</b>이라 생활 리듬과 대화 템포가 잘 맞아요.`],
+        [HANJA[m.lacking[0]], m.lackingCount === 0
+          ? `내 사주에 없는 <b>${lackingText} 기운</b>을 가진 사람과 함께하면 균형이 잡혀요.${fills.length ? ` ${m.pillar} 일주가 마침 그 기운을 갖고 있어요.` : ''}`
+          : `내게 적은 <b>${lackingText} 기운</b>이 강한 사람과 함께하면 균형이 잡혀요.${fills.length ? ` ${m.pillar} 일주가 마침 그 기운을 갖고 있어요.` : ''}`],
+      ];
+      const warn = `일지가 <b>${m.clashBranch}(${ANIMAL[m.clashBranch]})</b>인 사람과는 부딪히기 쉬워요. 만나면 한 템포 쉬어가 주세요.`;
+
+      document.getElementById('match').innerHTML = `
+        <h3>나와 잘 맞는 사람</h3>
+        <p class="sub">일주로 본 찰떡 궁합이에요</p>
+        <div class="match-hero">
+          <div class="chars">
+            <span class="char" style="background:${COLOR[m.stemElement]}">${m.stem}</span>
+            <span class="char" style="background:${COLOR[m.branchElement]}">${m.branch}</span>
+          </div>
+          <div>
+            <div class="nick">${STEM_COLOR[m.stemElement]} ${ANIMAL[m.branch]}</div>
+            <div class="name">${m.pillar} 일주</div>
+            <p>${DAY_MASTER_TEXT[m.stem] ?? ''}</p>
+          </div>
+        </div>
+        <ul class="reasons">
+          ${reasons.map(([icon, text]) => `<li><span class="icon">${icon}</span><span>${text}</span></li>`).join('')}
+          <li class="warn"><span class="icon">沖</span><span>${warn}</span></li>
+        </ul>`;
+    }
 
     const params = new URLSearchParams(location.search);
     const inviteCode = params.get('code');
@@ -533,6 +615,8 @@
         <div class="bar"><span class="name" style="color:${COLOR[k]}">${HANJA[k]}</span>
         <div class="track"><div class="fill" data-w="${(v / max) * 100}" style="background:${COLOR[k]}"></div></div>
         <span class="count">${v}</span></div>`).join('');
+
+      renderMatch(data);
 
       const result = document.getElementById('result');
       result.classList.add('show');

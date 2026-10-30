@@ -2,6 +2,7 @@
 // 검증 → 사주 계산 → DB 저장 순서로 처리하고, 본인 사주만 돌려준다.
 import { createClient } from '@supabase/supabase-js';
 import { computeSaju } from '../lib/saju.js';
+import { findIdealMatch } from '../lib/match.js';
 
 const CONSENT_VERSION = '2026-10-30-v2';
 const LIBRARY_VERSIONS = { manseryeok: '2.0.0', 'lunar-javascript': '1.7.7' };
@@ -98,5 +99,6 @@ export default async function handler(req, res) {
     dayMasterElement: saju.dayMasterElement,
     elements: saju.elements,
     timeKnown: saju.timeKnown,
+    match: findIdealMatch(saju),
   });
 }
