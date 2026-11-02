@@ -21,7 +21,7 @@ function isAdmin(req) {
 async function loadParticipants() {
   const { data, error } = await supabase
     .from('participants')
-    .select('id, display_name, created_at, saju_results(year_pillar, month_pillar, day_pillar, hour_pillar, day_master_element, elements, gender, cross_check_ok)')
+    .select('id, display_name, created_at, saju_results(day_pillar, day_master_element, elements, gender, cross_check_ok)')
     .order('created_at');
   if (error) throw error;
   return data.filter((p) => p.saju_results);
@@ -64,6 +64,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: '참여자 정보를 불러오지 못했어요.' });
   }
 
+  // 운영자에게도 참여자의 사주 결과는 보여주지 않는다. 이름, 성별, 계산 검증 여부만 보여준다.
   if (body.action === 'status') {
     return res.status(200).json({
       count: rows.length,
@@ -71,13 +72,6 @@ export default async function handler(req, res) {
         name: r.display_name,
         gender: r.saju_results.gender,
         crossCheckOk: r.saju_results.cross_check_ok,
-        // 운영자 확인용 사주 여덟 글자와 오행. 원본 생년월일은 보내지 않는다.
-        pillars: {
-          year: r.saju_results.year_pillar, month: r.saju_results.month_pillar,
-          day: r.saju_results.day_pillar, hour: r.saju_results.hour_pillar,
-        },
-        dayMasterElement: r.saju_results.day_master_element,
-        elements: r.saju_results.elements,
       })),
     });
   }
