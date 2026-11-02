@@ -352,6 +352,13 @@
     .member { padding: 5px 12px; border-radius: 99px; background: rgba(244,239,228,.12); font-size: 14px; }
     .member.me { background: var(--seal); font-weight: 700; }
     .bapjo-reason { margin: 14px 0 0; font-size: 14.5px; color: #e6ddcc; text-align: left; }
+    .bapjo-energy { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: rgba(244,239,228,.08); font-size: 14px; color: #f1e8d8; text-align: left; }
+    .bapjo-pairs { text-align: left; }
+    .pairs-title { margin: 18px 0 8px; font-size: 12.5px; letter-spacing: .14em; color: #c9bfae; }
+    .pair { padding: 10px 0; border-top: 1px solid rgba(244,239,228,.12); }
+    .pair b { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+    .pair .best { font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: var(--seal); color: #fbefe6; }
+    .pair p { margin: 4px 0 0; font-size: 14px; color: #e6ddcc; }
     .reading { margin-top: 26px; padding-top: 22px; border-top: 1px dashed var(--line); }
     .reading h3 { font-family: "Gowun Batang", serif; font-size: 19px; margin: 0 0 4px; text-align: center; }
     .reading .sub { text-align: center; font-size: 13.5px; color: var(--ink-faint); margin: 0 0 16px; }
@@ -586,16 +593,47 @@
         <p class="bapjo-label">나의 밥조</p>
         <h3></h3>
         <div class="bapjo-members"></div>
-        <p class="bapjo-reason"></p>`;
+        <p class="bapjo-reason"></p>
+        <p class="bapjo-energy" hidden></p>
+        <div class="bapjo-pairs"></div>`;
       box.querySelector('h3').textContent = b.name;
       box.querySelector('.bapjo-reason').textContent = b.reason;
+      if (b.energy) {
+        const energy = box.querySelector('.bapjo-energy');
+        energy.textContent = b.energy;
+        energy.hidden = false;
+      }
       const list = box.querySelector('.bapjo-members');
+      const pairs = box.querySelector('.bapjo-pairs');
+      const others = b.members.filter((m) => !m.me && m.lines?.length);
+      if (others.length) {
+        const title = document.createElement('p');
+        title.className = 'pairs-title';
+        title.textContent = '조원과 나의 궁합';
+        pairs.appendChild(title);
+      }
       for (const m of b.members) {
         const span = document.createElement('span');
         span.className = m.me ? 'member me' : 'member';
         span.textContent = m.me ? `${m.name} (나)` : m.name;
         list.appendChild(span);
       }
+      others.forEach((m) => {
+        const row = document.createElement('div');
+        row.className = 'pair';
+        const name = document.createElement('b');
+        name.textContent = m.name;
+        if (m.best) {
+          const tag = document.createElement('span');
+          tag.className = 'best';
+          tag.textContent = '최고 궁합';
+          name.appendChild(tag);
+        }
+        const p = document.createElement('p');
+        p.textContent = m.lines.join(' ');
+        row.append(name, p);
+        pairs.appendChild(row);
+      });
     }
 
     function renderReading(r) {

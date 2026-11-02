@@ -6,6 +6,7 @@ import { findIdealMatch } from '../lib/match.js';
 import { readSaju } from '../lib/reading.js';
 import { readSpecials } from '../lib/specials.js';
 import { readCharacter } from '../lib/character.js';
+import { pairStory, groupEnergy } from '../lib/compat.js';
 
 const CONSENT_VERSION = '2026-10-30-v5';
 const LIBRARY_VERSIONS = { manseryeok: '2.0.0', 'lunar-javascript': '1.7.7' };
@@ -132,12 +133,34 @@ async function findBapjo(participantId) {
     .eq('participant_id', participantId).maybeSingle();
   if (!mine) return null;
   const { data: members } = await supabase
-    .from('bapjo_assignments').select('participant_id, participants(display_name)')
+    .from('bapjo_assignments')
+    .select('participant_id, participants(display_name, saju_results(day_pillar, day_master_element, elements, gender))')
     .eq('group_no', mine.group_no);
+  const rows = members ?? [];
+  // 궁합 설명은 서버에서 계산해 문장만 보낸다. 조원의 사주 글자 자체는 내려보내지 않는다.
+  const person = (m) => {
+    const s = m.participants?.saju_results;
+    return s && {
+      gender: s.gender, dayStem: s.day_pillar[0], dayBranch: s.day_pillar[1],
+      dayMasterElement: s.day_master_element, elements: s.elements,
+    };
+  };
+  const me = rows.find((m) => m.participant_id === participantId);
+  const myPerson = me && person(me);
+  const people = rows.map(person).filter(Boolean);
   return {
     name: mine.group_name,
     reason: mine.group_reason,
-    members: (members ?? []).map((m) => ({ name: m.participants?.display_name ?? '', me: m.participant_id === participantId })),
+    energy: people.length ? groupEnergy(people).text : null,
+    members: rows
+      .map((m) => {
+        const isMe = m.participant_id === participantId;
+        const other = person(m);
+        const story = !isMe && myPerson && other ? pairStory(myPerson, other) : null;
+        return { name: m.participants?.display_name ?? '', me: isMe, score: story?.score ?? null, lines: story?.lines ?? [] };
+      })
+      .sort((a, b) => (b.me - a.me) || ((b.score ?? 0) - (a.score ?? 0)))
+      .map(({ score, ...rest }, i) => ({ ...rest, best: i === 1 && score > 0 })),
   };
 }
 
