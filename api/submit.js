@@ -8,7 +8,7 @@ import { readSpecials } from '../lib/specials.js';
 import { readCharacter } from '../lib/character.js';
 import { pairStory, groupEnergy } from '../lib/compat.js';
 
-const CONSENT_VERSION = '2026-10-30-v5';
+const CONSENT_VERSION = '2026-11-02-v6';
 const LIBRARY_VERSIONS = { manseryeok: '2.0.0', 'lunar-javascript': '1.7.7' };
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
