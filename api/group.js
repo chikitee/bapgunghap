@@ -76,6 +76,15 @@ export default async function handler(req, res) {
     });
   }
 
+  // 학회원이 아닌 사람이나 본인이 삭제를 원하는 사람을 지운다. 생일·사주·밥조 기록도 함께 지워진다(on delete cascade).
+  if (body.action === 'delete') {
+    const target = rows.find((r) => r.display_name === body.name);
+    if (!target) return res.status(404).json({ error: '그 이름의 참여자를 찾지 못했어요.' });
+    const { error: delErr } = await supabase.from('participants').delete().eq('id', target.id);
+    if (delErr) return res.status(500).json({ error: '삭제하지 못했어요.' });
+    return res.status(200).json({ deleted: target.display_name });
+  }
+
   if (body.action === 'publish') {
     const { data: run } = await supabase.from('grouping_runs').select('assignment').eq('id', body.runId).maybeSingle();
     if (!run?.assignment) return res.status(404).json({ error: '확정할 편성안을 찾지 못했어요.' });

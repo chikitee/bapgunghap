@@ -68,6 +68,11 @@
     .chip .g { font-size: 12px; font-weight: 700; }
     .chip .g.f { color: var(--fire); } .chip .g.m { color: var(--water); }
     .chip.warn { border-color: var(--seal); }
+    .chip .x {
+      border: 0; background: none; padding: 0 2px 0 4px; margin-left: 2px; min-width: 24px; min-height: 24px;
+      font-size: 17px; line-height: 1; color: var(--ink-faint); cursor: pointer;
+    }
+    .chip .x:hover { color: var(--seal); }
     .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
     .stat { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px; text-align: center; }
     .stat b { display: block; font-family: "Noto Serif KR", serif; font-size: 26px; font-weight: 900; line-height: 1.2; }
@@ -102,7 +107,7 @@
 
     <section class="card" id="status" hidden>
       <h2>참여 현황 <span id="count"></span></h2>
-      <p class="muted">빨간 테두리는 두 라이브러리의 계산이 달라 확인이 필요한 사람이에요.</p>
+      <p class="muted">빨간 테두리는 두 라이브러리의 계산이 달라 확인이 필요한 사람이에요. 이름 옆 ×를 누르면 그 사람의 기록을 모두 지워요.</p>
       <div class="chips" id="people"></div>
     </section>
 
@@ -141,7 +146,7 @@
 
     const $ = (id) => document.getElementById(id);
     const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const chip = (p, warn) => `<span class="chip${warn ? ' warn' : ''}"><span class="g ${p.gender === 'female' ? 'f' : 'm'}">${p.gender === 'female' ? '여' : '남'}</span>${esc(p.name)}</span>`;
+    const chip = (p, warn, removable) => `<span class="chip${warn ? ' warn' : ''}"><span class="g ${p.gender === 'female' ? 'f' : 'm'}">${p.gender === 'female' ? '여' : '남'}</span>${esc(p.name)}${removable ? `<button class="x" type="button" data-name="${esc(p.name)}" aria-label="${esc(p.name)} 삭제">×</button>` : ''}</span>`;
 
     async function api(action, extra = {}) {
       const res = await fetch('/api/group', {
@@ -161,9 +166,24 @@
       $('status').hidden = false;
       $('run-card').hidden = false;
       $('count').textContent = `· ${data.count}명`;
-      $('people').innerHTML = data.participants.map((p) => chip(p, !p.crossCheckOk)).join('') || '<p class="muted">아직 참여자가 없어요.</p>';
+      $('people').innerHTML = data.participants.map((p) => chip(p, !p.crossCheckOk, true)).join('') || '<p class="muted">아직 참여자가 없어요.</p>';
       $('run').disabled = data.count < 4;
     }
+
+    $('people').addEventListener('click', async (e) => {
+      const btn = e.target.closest('.x');
+      if (!btn) return;
+      const name = btn.dataset.name;
+      if (!confirm(`${name} 님의 기록(생일·사주·밥조)을 모두 지울까요? 되돌릴 수 없어요.`)) return;
+      btn.disabled = true;
+      try {
+        await api('delete', { name });
+        await loadStatus();
+      } catch (err) {
+        alert(err.message);
+        btn.disabled = false;
+      }
+    });
 
     $('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
