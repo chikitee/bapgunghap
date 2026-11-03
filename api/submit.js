@@ -71,6 +71,11 @@ export default async function handler(req, res) {
     if (existing.same) return sendResult(res, saju, input.gender, true, await findBapjo(existing.id));
     return bad(res, 409, '같은 이름으로 이미 참여한 사람이 있어요. 본인이라면 처음 입력한 정보 그대로, 다른 사람이라면 이름 뒤에 숫자를 붙여 입력해 주세요.');
   }
+  // 이름만 다르고 생일·시각·성별이 같은 기록이 있으면 닉네임을 잘못 쓴 경우가 대부분이다.
+  // 새로 저장하지 않고 이름을 다시 확인하게 한다. 저장된 이름은 알려주지 않는다.
+  if (await hasSameBirth(saju, input.gender)) {
+    return bad(res, 409, '같은 생년월일·시각으로 이미 참여한 기록이 있어요. 처음에 쓴 이름(닉네임)을 띄어쓰기까지 똑같이 다시 입력해 주세요. 처음 참여하는 거라면 운영진에게 알려주세요.');
+  }
 
   const { data: participant, error: pErr } = await supabase
     .from('participants')
@@ -162,6 +167,18 @@ async function findBapjo(participantId) {
       .sort((a, b) => (b.me - a.me) || ((b.score ?? 0) - (a.score ?? 0)))
       .map(({ score, ...rest }, i) => ({ ...rest, best: i === 1 && score > 0 })),
   };
+}
+
+async function hasSameBirth(saju, gender) {
+  let query = supabase
+    .from('saju_results').select('participant_id')
+    .eq('year_pillar', saju.pillars.year)
+    .eq('month_pillar', saju.pillars.month)
+    .eq('day_pillar', saju.pillars.day)
+    .eq('gender', gender);
+  query = saju.pillars.hour ? query.eq('hour_pillar', saju.pillars.hour) : query.is('hour_pillar', null);
+  const { data } = await query.limit(1);
+  return (data ?? []).length > 0;
 }
 
 // 같은 이름이 이미 있으면 새로 저장하지 않는다. 입력한 사주와 성별이 저장된 것과 같을 때만
