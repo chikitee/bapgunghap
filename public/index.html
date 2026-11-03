@@ -358,6 +358,13 @@
     .pair { padding: 10px 0; border-top: 1px solid rgba(244,239,228,.12); }
     .pair b { display: flex; align-items: center; gap: 8px; font-size: 15px; }
     .pair .best { font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: var(--seal); color: #fbefe6; }
+    .bapjo-how { margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(244,239,228,.12); text-align: left; }
+    .bapjo-how summary { cursor: pointer; font-size: 14px; font-weight: 600; color: #f1e8d8; }
+    .bapjo-how p { margin: 10px 0 0; font-size: 13.5px; color: #d9cfbd; }
+    .bapjo-how ul { margin: 8px 0 0; padding-left: 18px; }
+    .bapjo-how li { font-size: 13.5px; color: #d9cfbd; }
+    .bapjo-how li + li { margin-top: 4px; }
+    .bapjo-how li b { color: #f6eddc; margin-right: 4px; }
     .pair ul { margin: 6px 0 0; padding-left: 18px; }
     .pair li { font-size: 14px; color: #e6ddcc; }
     .pair li + li { margin-top: 6px; }
@@ -598,7 +605,19 @@
         <div class="bapjo-members"></div>
         <p class="bapjo-reason"></p>
         <p class="bapjo-energy" hidden></p>
-        <div class="bapjo-pairs"></div>`;
+        <div class="bapjo-pairs"></div>
+        <details class="bapjo-how">
+          <summary>이 조는 어떻게 짜였나요?</summary>
+          <p>사주 궁합에서 실제로 쓰는 규칙으로 조원끼리의 궁합을 하나하나 계산했어요.</p>
+          <ul>
+            <li><b>서로 끌리는 글자</b> 나를 뜻하는 글자끼리 짝을 이루는 사이 (천간합)</li>
+            <li><b>생활 리듬 짝꿍</b> 태어난 날의 동물이 짝꿍인 사이 (육합)</li>
+            <li><b>기운을 북돋움</b> 나무→불→흙→쇠→물처럼 한쪽이 다른 쪽을 살려주는 사이 (상생)</li>
+            <li><b>없는 기운 채움</b> 나에게 없는 기운을 상대가 넉넉히 가진 사이</li>
+            <li><b>성향이 다름</b> 태어난 날의 동물이 서로 반대편인 사이 (충)는 점수를 조금 낮게 봐요</li>
+          </ul>
+          <p>모든 조가 고르게 잘 맞도록, 조마다 남녀 비율도 맞춰서 AI가 여러 안을 비교해 골랐어요. AI에는 이름과 생년월일 없이 무작위 번호와 기운 정보만 보냈어요. 전통 해석을 바탕으로 한 재미 요소이니 가볍게 즐겨 주세요.</p>
+        </details>`;
       box.querySelector('h3').textContent = b.name;
       box.querySelector('.bapjo-reason').textContent = b.reason;
       if (b.energy) {
