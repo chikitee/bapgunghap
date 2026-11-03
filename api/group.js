@@ -160,13 +160,14 @@ export default async function handler(req, res) {
         name: g.name,
         reason: g.reason,
         score: result.evaluation.groups[i].score,
+        average: result.evaluation.groups[i].average,
         members: named(g.members),
       })),
     },
     baseline: {
       totalScore: baseline.totalScore,
       lowestGroup: baseline.lowestGroup,
-      groups: baseline.groups.map((g) => ({ score: g.score, members: named(g.members) })),
+      groups: baseline.groups.map((g) => ({ score: g.score, average: g.average, members: named(g.members) })),
     },
   });
 }

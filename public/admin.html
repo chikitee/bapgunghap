@@ -212,13 +212,13 @@
         $('fallback-note').classList.toggle('show', !!data.fallbackReason);
         $('groups').innerHTML = data.ai.groups.map((g) => `
           <article class="group">
-            <div class="group-head"><h3>${esc(g.name)}</h3><span class="score">궁합 ${g.score}점</span></div>
+            <div class="group-head"><h3>${esc(g.name)}</h3><span class="score">궁합 평균 ${g.average}점</span></div>
             <div class="chips">${g.members.map((m) => chip(m)).join('')}</div>
             <p>${esc(g.reason)}</p>
           </article>`).join('');
         $('baseline').innerHTML = data.baseline.groups.map((g, i) => `
           <article class="group">
-            <div class="group-head"><h3>${i + 1}조</h3><span class="score">궁합 ${g.score}점</span></div>
+            <div class="group-head"><h3>${i + 1}조</h3><span class="score">궁합 평균 ${g.average}점</span></div>
             <div class="chips">${g.members.map((m) => chip(m)).join('')}</div>
           </article>`).join('');
         $('result').hidden = false;
