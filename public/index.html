@@ -733,10 +733,10 @@
         </article>`;
       box.innerHTML = `
         <h3>회계사로 보는 나의 커리어</h3>
-        <p class="sub">감사, 세무, 딜, 컨설팅, 개업 중 나에게 맞는 길 두 가지</p>
-        ${c.fields.map((f) => card(f.rank === 1 ? '業' : '副', `잘 맞는 분야 ${f.rank}순위 · ${f.label}`, f.title, f.body,
+        <p class="sub">입사할 때 잘 맞는 부서 두 가지, 그리고 그다음 커리어</p>
+        ${c.fields.map((f) => card(f.rank === 1 ? '業' : '副', `입사 부서 ${f.rank}순위 · ${f.label}`, f.title, f.body,
           `${f.rank === 1 ? `<p class="more">${c.trait}</p>` : ''}<p class="basis">${f.basis}</p>`)).join('')}
-        ${card('路', '파트너 vs 이직 vs 개업', c.path.title, c.path.body, `<p class="basis">${c.path.basis}</p>`)}
+        ${card('路', '그다음 커리어 · 파트너 vs 이직 vs 개업', c.path.title, c.path.body, `<p class="basis">${c.path.basis}</p>`)}
         ${card('手', '일하는 스타일', c.style.title, c.style.body)}
         ${card('忙', '바쁜 시즌 버티는 법', '나만의 충전법', c.busy)}
         ${card('丁', '2027년 커리어 흐름', '내년의 나', c.year)}`;
