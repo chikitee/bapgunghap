@@ -445,7 +445,6 @@
     .decade-list .half .h-label small { font-weight: 400; color: var(--ink-faint); }
     .decade-list .half p { margin: 0; font-size: 13.5px; }
     .decade-list .half b { font-size: 13.5px; margin-right: 2px; }
-    .decade-list .d-tip { margin-top: 8px; font-size: 13.5px; color: var(--seal); }
     .month-row { display: flex; gap: 12px; align-items: flex-start; }
     .month-row + .month-row { margin-top: 10px; }
     .month-row .m { flex: none; min-width: 44px; padding: 0 6px; box-sizing: border-box; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--seal); color: #fbefe6; font-family: "Noto Serif KR", serif; font-weight: 900; font-size: 16px; }
@@ -809,7 +808,6 @@
           <p>${d.body}</p>
           <p class="d-career">${d.career}</p>
           ${halves}
-          ${d.tip ? `<p class="d-tip">이렇게 써 보세요. ${d.tip}</p>` : ''}
         </div></li>`;
       }).join('');
       const intro = f.intro ? `
