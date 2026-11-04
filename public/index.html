@@ -710,12 +710,12 @@
 
     // 결과가 길어서 세 페이지로 나눈다. 위에는 탭, 아래에는 다음 페이지 버튼.
     const PAGES = [
-      { label: '밥조·커리어', ids: ['bapjo', 'career', 'next'] },
+      { label: '사주와 나', ids: ['character', 'saju-block', 'reading', 'specials', 'match', 'next'] },
+      { label: '밥조·커리어', ids: ['bapjo', 'career'] },
       { label: '인생 흐름', ids: ['flow'] },
-      { label: '사주와 나', ids: ['character', 'saju-block', 'reading', 'specials', 'match'] },
     ];
     function setupPages(hasBapjo) {
-      const labels = PAGES.map((p, i) => (i === 0 && !hasBapjo ? '커리어' : p.label));
+      const labels = PAGES.map((p, i) => (i === 1 && !hasBapjo ? '커리어' : p.label));
       const tabs = document.getElementById('tabs');
       const nextBtn = document.getElementById('next-page');
       const show = (n, scroll) => {
