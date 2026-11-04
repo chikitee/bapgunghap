@@ -27,24 +27,53 @@ async function loadParticipants() {
   return data.filter((p) => p.saju_results);
 }
 
-// 링크 열람·결과 조회 횟수. 테이블이 아직 없으면 null을 돌려준다.
+// 링크 열람·결과 조회 횟수. submit.js가 Storage 버킷에 남긴 파일 이름을 세서 만든다.
+const VIEW_BUCKET = 'link-views';
+async function listAll(prefix) {
+  const out = [];
+  for (let offset = 0; offset < 50000; offset += 1000) {
+    const { data, error } = await supabase.storage.from(VIEW_BUCKET).list(prefix, { limit: 1000, offset });
+    if (error) throw error;
+    out.push(...data);
+    if (data.length < 1000) break;
+  }
+  return out;
+}
 async function loadViews() {
-  const { data, error } = await supabase.from('link_views').select('kind, visitor, participant_id, created_at').limit(20000);
-  if (error) return null;
+  const data = [];
+  try {
+    for (const kind of ['open', 'result']) {
+      const days = (await listAll(kind)).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d.name));
+      for (const d of days) {
+        for (const f of await listAll(`${kind}/${d.name}`)) {
+          const [, , visitor, pid] = f.name.split('_');
+          data.push({ kind, day: d.name, visitor: visitor === 'x' ? null : visitor, participant_id: pid === 'x' ? null : pid });
+        }
+      }
+    }
+  } catch {
+    // 버킷이 아직 없으면(아무도 안 열었으면) 0으로 본다
+  }
   const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10); // 한국 날짜
-  const isToday = (t) => new Date(new Date(t).getTime() + 9 * 3600e3).toISOString().slice(0, 10) === today;
+  const days = new Map();
+  for (const v of data) {
+    const row = days.get(v.day) ?? { date: v.day, opens: 0, results: 0 };
+    if (v.kind === 'open') row.opens += 1; else row.results += 1;
+    days.set(v.day, row);
+  }
   const opens = data.filter((v) => v.kind === 'open');
   const results = data.filter((v) => v.kind === 'result');
   const byPerson = new Map();
   for (const v of results) if (v.participant_id) byPerson.set(v.participant_id, (byPerson.get(v.participant_id) ?? 0) + 1);
   return {
     byPerson,
+    daily: [...days.values()].sort((a, b) => b.date.localeCompare(a.date)),
     summary: {
       opens: opens.length,
       openDevices: new Set(opens.map((v) => v.visitor).filter(Boolean)).size,
-      opensToday: opens.filter((v) => isToday(v.created_at)).length,
+      opensToday: opens.filter((v) => v.day === today).length,
       results: results.length,
-      resultsToday: results.filter((v) => isToday(v.created_at)).length,
+      resultsToday: results.filter((v) => v.day === today).length,
     },
   };
 }
@@ -88,16 +117,26 @@ export default async function handler(req, res) {
 
   // 운영자에게도 참여자의 사주 결과는 보여주지 않는다. 이름, 성별, 계산 검증 여부만 보여준다.
   if (body.action === 'status') {
-    const views = await loadViews();
     return res.status(200).json({
       count: rows.length,
-      views: views && views.summary,
       participants: rows.map((r) => ({
         name: r.display_name,
-        views: views ? (views.byPerson.get(r.id) ?? 0) : null,
         gender: r.saju_results.gender,
         crossCheckOk: r.saju_results.cross_check_ok,
       })),
+    });
+  }
+
+  // 조회수 전용 페이지(stats.html)용
+  if (body.action === 'views') {
+    const views = await loadViews();
+    return res.status(200).json({
+      ready: true,
+      ...views.summary,
+      daily: views.daily,
+      people: rows
+        .map((r) => ({ name: r.display_name, views: views.byPerson.get(r.id) ?? 0 }))
+        .sort((a, b) => b.views - a.views),
     });
   }
 

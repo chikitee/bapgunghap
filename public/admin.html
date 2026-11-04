@@ -75,8 +75,6 @@
     .chip .x:hover { color: var(--seal); }
     .chip.off { opacity: .45; text-decoration: line-through; }
     .chip .nm { cursor: pointer; }
-    .chip .vc { font-size: 11px; color: var(--muted, #888); margin-left: 2px; }
-    #views .stat i { font-style: normal; }
     .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
     .stat { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px; text-align: center; }
     .stat b { display: block; font-family: "Noto Serif KR", serif; font-size: 26px; font-weight: 900; line-height: 1.2; }
@@ -114,12 +112,6 @@
       <p class="muted">빨간 테두리는 두 라이브러리의 계산이 달라 확인이 필요한 사람이에요. 이름 옆 ×를 누르면 그 사람의 기록을 모두 지워요.</p>
       <p class="muted"><b>MT에 오지 않는 사람은 이름을 눌러 편성에서 빼 주세요.</b> 기록은 그대로 남고, 다시 누르면 돌아와요.</p>
       <p class="muted" id="target-count"></p>
-      <div class="summary" id="views" hidden>
-        <div class="stat"><b id="v-opens"></b><span>링크 열람<br>오늘 <i id="v-opens-today"></i></span></div>
-        <div class="stat"><b id="v-devices"></b><span>열어 본 기기<br>(대략 인원)</span></div>
-        <div class="stat"><b id="v-results"></b><span>결과 조회<br>오늘 <i id="v-results-today"></i></span></div>
-      </div>
-      <p class="muted" id="views-note"></p>
       <div class="chips" id="people"></div>
     </section>
 
@@ -163,7 +155,7 @@
 
     const $ = (id) => document.getElementById(id);
     const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const chip = (p, warn, removable) => `<span class="chip${warn ? ' warn' : ''}${removable && excluded.has(p.name) ? ' off' : ''}"><span class="g ${p.gender === 'female' ? 'f' : 'm'}">${p.gender === 'female' ? '여' : '남'}</span>${removable ? `<span class="nm" data-name="${esc(p.name)}" role="button" tabindex="0">${esc(p.name)}</span>` : esc(p.name)}${removable && p.views != null ? `<span class="vc" title="결과 조회 횟수">${p.views}회</span>` : ''}${removable ? `<button class="x" type="button" data-name="${esc(p.name)}" aria-label="${esc(p.name)} 삭제">×</button>` : ''}</span>`;
+    const chip = (p, warn, removable) => `<span class="chip${warn ? ' warn' : ''}${removable && excluded.has(p.name) ? ' off' : ''}"><span class="g ${p.gender === 'female' ? 'f' : 'm'}">${p.gender === 'female' ? '여' : '남'}</span>${removable ? `<span class="nm" data-name="${esc(p.name)}" role="button" tabindex="0">${esc(p.name)}</span>` : esc(p.name)}${removable ? `<button class="x" type="button" data-name="${esc(p.name)}" aria-label="${esc(p.name)} 삭제">×</button>` : ''}</span>`;
 
     async function api(action, extra = {}) {
       const res = await fetch('/api/group', {
@@ -184,18 +176,6 @@
       $('run-card').hidden = false;
       $('count').textContent = `· ${data.count}명`;
       participants = data.participants;
-      const v = data.views;
-      $('views').hidden = !v;
-      if (v) {
-        $('v-opens').textContent = `${v.opens}회`;
-        $('v-opens-today').textContent = `${v.opensToday}회`;
-        $('v-devices').textContent = `${v.openDevices}대`;
-        $('v-results').textContent = `${v.results}회`;
-        $('v-results-today').textContent = `${v.resultsToday}회`;
-      }
-      $('views-note').textContent = v
-        ? '링크 열람은 초대 링크를 연 횟수, 이름 옆 숫자는 그 사람이 결과를 본 횟수예요(처음 입력 포함).'
-        : '조회 횟수 집계를 켜려면 Supabase에서 link_views 테이블 SQL을 한 번 실행해 주세요.';
       // 지워진 사람은 제외 목록에서도 정리한다
       excluded = new Set([...excluded].filter((n) => participants.some((p) => p.name === n)));
       saveExcluded();

@@ -125,10 +125,21 @@ export default async function handler(req, res) {
   return sendResult(res, saju, input.gender, false);
 }
 
-// 조회 기록은 부가 기능이라 실패해도(테이블이 아직 없어도) 본 기능은 그대로 동작한다.
+// 조회 기록은 DB 테이블 대신 Supabase Storage의 비공개 버킷에 빈 파일 하나로 남긴다
+// (SQL 실행 없이 동작). 파일 이름 = 종류/한국날짜/시각_무작위_기기번호_참여자ID. 이름·IP는 남기지 않는다.
+// 부가 기능이라 실패해도 본 기능은 그대로 동작한다.
+const VIEW_BUCKET = 'link-views';
 async function logView(kind, visitor, participantId) {
   try {
-    await supabase.from('link_views').insert({ kind, visitor, participant_id: participantId });
+    const day = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+    const v = String(visitor ?? '').replace(/[^a-z0-9]/gi, '').slice(0, 20) || 'x';
+    const path = `${kind}/${day}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${v}_${participantId ?? 'x'}`;
+    const put = () => supabase.storage.from(VIEW_BUCKET).upload(path, '1', { contentType: 'text/plain' });
+    const { error } = await put();
+    if (error) {
+      await supabase.storage.createBucket(VIEW_BUCKET, { public: false });
+      await put();
+    }
   } catch {}
 }
 
