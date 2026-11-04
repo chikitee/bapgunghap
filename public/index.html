@@ -422,6 +422,19 @@
     .decade-list li { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 14px; color: var(--ink-soft); }
     .decade-list li b { color: var(--ink); font-size: 14.5px; margin-right: 6px; }
     .decade-list li p { margin: 4px 0 0; }
+    .decade-list summary { cursor: pointer; list-style: none; position: relative; padding-right: 52px; }
+    .decade-list summary::-webkit-details-marker { display: none; }
+    .decade-list summary::after { content: "자세히 ▾"; position: absolute; right: 0; top: 2px; font-size: 12px; color: var(--ink-faint); }
+    .decade-list details[open] summary::after { content: "접기 ▴"; }
+    .decade-list .d-meta { display: block; font-size: 12.5px; color: var(--ink-faint); margin-top: 3px; }
+    .decade-list .d-career { color: var(--ink); }
+    .decade-list .half { display: flex; gap: 10px; margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: var(--paper-deep); }
+    .decade-list .half.on { outline: 1.5px solid var(--seal); }
+    .decade-list .half .h-label { flex: 0 0 64px; font-size: 12.5px; font-weight: 700; color: var(--ink); line-height: 1.35; }
+    .decade-list .half .h-label small { font-weight: 400; color: var(--ink-faint); }
+    .decade-list .half p { margin: 0; font-size: 13.5px; }
+    .decade-list .half b { font-size: 13.5px; margin-right: 2px; }
+    .decade-list .d-tip { margin-top: 8px; font-size: 13.5px; color: var(--seal); }
     .month-row { display: flex; gap: 12px; align-items: flex-start; }
     .month-row + .month-row { margin-top: 10px; }
     .month-row .m { flex: none; min-width: 44px; padding: 0 6px; box-sizing: border-box; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--seal); color: #fbefe6; font-family: "Noto Serif KR", serif; font-weight: 900; font-size: 16px; }
@@ -739,9 +752,26 @@
           <div class="col" data-h="${d.level}"></div>
         </div>`).join('');
       const axis = f.decades.map((d) => `<span>${d.from}~${d.to}</span>`).join('');
-      const list = f.decades.map((d) => `
-        <li><b>${d.from}~${d.to}세 ${d.name}</b>${d.peak ? '<span class="tag peak">황금기</span>' : d.now ? '<span class="tag">지금</span>' : ''}
-          <p>${d.career}</p></li>`).join('');
+      const list = f.decades.map((d) => {
+        const tag = d.peak ? '<span class="tag peak">황금기</span>' : d.now ? '<span class="tag">지금</span>' : '';
+        const halves = (d.halves || []).map((h, i) => `
+          <div class="half${d.nowHalf === i ? ' on' : ''}"><span class="h-label">${h.label}<br><small>${h.years}</small></span>
+            <p><b>${h.el}</b> ${h.text}<br><small>${h.note}${d.nowHalf === i ? ' 지금 여기예요.' : ''}</small></p></div>`).join('');
+        return `
+        <li><details${d.now ? ' open' : ''}>
+          <summary><b>${d.from}~${d.to}세 ${d.name}</b>${tag}<span class="d-meta">${d.years || ''}${d.ganzhi ? ` · ${d.ganzhi} 대운(${d.elements})` : ''}</span></summary>
+          <p>${d.body}</p>
+          <p class="d-career">${d.career}</p>
+          ${halves}
+          ${d.tip ? `<p class="d-tip">이렇게 써 보세요. ${d.tip}</p>` : ''}
+        </details></li>`;
+      }).join('');
+      const intro = f.intro ? `
+        <article class="read-card" style="margin-top:10px">
+          <div class="read-head"><span class="read-icon">運</span><span class="read-label">대운이 뭐예요?</span></div>
+          <p>대운은 태어난 달에서 출발해 <b>10년마다 바뀌는 큰 운의 계절</b>이에요. 10년 중 앞 5년은 하늘 기운(천간), 뒤 5년은 땅 기운(지지)이 더 크게 작용한다고 봐요.${f.intro.start ? ` 내 대운은 <b>${f.intro.start}세</b>에 시작해요.` : ''}</p>
+          <p class="more">${f.intro.why} 막대가 낮은 시기는 나쁜 때가 아니라 기본기를 다지는 때예요. 시기를 누르면 자세한 풀이가 열려요.</p>
+        </article>` : '';
       box.innerHTML = `
         <h3>나의 기운과 인생 흐름</h3>
         <p class="sub">10년마다 바뀌는 운의 흐름(대운)과 2027년 좋은 달</p>
@@ -749,6 +779,7 @@
           <div class="read-head"><span class="read-icon">氣</span><span class="read-label">나의 기운</span></div>
           <h4>${f.energy.title}</h4><p>${f.energy.body}</p><p class="more">${f.energy.help}</p>
         </article>
+        ${intro}
         <div style="margin-top:10px">
           <div class="decade-chart">${cols}</div>
           <div class="decade-axis">${axis}</div>
