@@ -740,11 +740,9 @@
         <p class="sub">입사할 때 잘 맞는 부서 두 가지, 그리고 그다음 커리어</p>
         ${c.fields.map((f) => card(f.rank === 1 ? '業' : '副', `입사 부서 ${f.rank}순위 · ${f.label}`, f.title, f.body,
           `${f.rank === 1 ? `<p class="more">${c.trait}</p>` : ''}
-          ${f.work ? `<div class="cd"><span class="k">실제로 하는 일</span><p>${f.work}</p></div>` : ''}
           ${f.team ? `<div class="cd"><span class="k">추천 세부 팀</span><p><b>${f.team.name}</b><br>${f.team.why}</p></div>` : ''}
           ${f.strengths ? `<div class="cd"><span class="k">이런 순간에 강해요</span><ul>${f.strengths.map((x) => `<li>${x}</li>`).join('')}</ul></div>` : ''}
           ${f.growth ? `<div class="cd"><span class="k">여기서 넓혀 갈 수 있는 길</span><p>${f.growth}</p></div>` : ''}
-          ${f.tip ? `<div class="cd"><span class="k">1년차에 해 두면 좋은 것</span><p>${f.tip}</p></div>` : ''}
           <p class="basis">${f.basis}</p>`)).join('')}
         ${card('路', '그다음 커리어 · 파트너 vs 이직 vs 개업', c.path.title, c.path.body,
           `${c.path.roadmap ? `<div class="cd"><span class="k">연차별 로드맵</span><ol class="roadmap">${c.path.roadmap.map(([when, what]) => `<li><b>${when}</b><span>${what}</span></li>`).join('')}</ol></div>` : ''}

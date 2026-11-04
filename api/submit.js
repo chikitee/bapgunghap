@@ -166,10 +166,11 @@ async function findBapjo(participantId) {
         const isMe = m.participant_id === participantId;
         const other = person(m);
         const story = !isMe && myPerson && other ? pairStory(myPerson, other) : null;
-        return { name: m.participants?.display_name ?? '', me: isMe, lines: story?.lines ?? [] };
+        return { name: m.participants?.display_name ?? '', me: isMe, score: story?.score ?? null, lines: story?.lines ?? [] };
       })
-      // 궁합 순위가 드러나지 않게 나 다음은 이름순으로 보여 준다
-      .sort((a, b) => (b.me - a.me) || a.name.localeCompare(b.name, 'ko')),
+      // 나 다음은 궁합이 잘 맞는 순서로 보여 준다. 점수와 '최고 궁합' 같은 문구는 내려보내지 않는다.
+      .sort((a, b) => (b.me - a.me) || ((b.score ?? 0) - (a.score ?? 0)))
+      .map(({ score, ...rest }) => rest),
   };
 }
 
