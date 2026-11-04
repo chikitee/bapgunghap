@@ -1,5 +1,5 @@
 // 입력 폼 제출을 받는 Vercel 서버 함수.
-// 검증 → 사주 계산 → DB 저장 순서로 처리하고, 본인 사주만 돌려준다.
+// 검증 → 사주 계산 → DB 저장 순서로 처리하고, 본인 사주 풀이와(공개된 경우) 내 밥조만 돌려준다.
 import { createClient } from '@supabase/supabase-js';
 import { computeSaju } from '../lib/saju.js';
 import { findIdealMatch } from '../lib/match.js';
