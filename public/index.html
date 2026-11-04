@@ -612,6 +612,7 @@
         <p class="hint" style="text-align:center">풀이는 한국에서 가장 널리 쓰는 자평명리(십성·신강약·억부법)를 기준으로 했어요.</p>
       </div>
       <div class="reading" id="reading"></div>
+      <div class="reading" id="rest" hidden></div>
       <div class="career" id="career" hidden></div>
       <div class="flow" id="flow" hidden></div>
       <div class="specials" id="specials"></div>
@@ -711,7 +712,7 @@
 
     // 결과가 길어서 세 페이지로 나눈다. 위에는 탭, 아래에는 다음 페이지 버튼.
     const PAGES = [
-      { label: '사주와 나', ids: ['bapjo', 'character', 'saju-block', 'reading', 'specials', 'match', 'next'] },
+      { label: '사주와 나', ids: ['bapjo', 'character', 'saju-block', 'reading', 'rest', 'specials', 'match', 'next'] },
       { label: '회계사 커리어', ids: ['career'] },
       { label: '인생 흐름', ids: ['flow'] },
     ];
@@ -828,16 +829,22 @@
           <div class="decade-axis">${axis}</div>
         </div>
         <ul class="decade-list">${list}</ul>
-        ${f.rest?.length ? `<article class="read-card" style="margin-top:10px">
-          <div class="read-head"><span class="read-icon">冬</span><span class="read-label">MT 이후 올해 남은 두 달</span></div>
-          ${f.rest.map((r) => `<div class="cd"><span class="k">${r.period} · ${r.ganzhi}월 · ${r.label}</span><ul>${r.todo.map((t) => `<li>${t}</li>`).join('')}</ul><p class="more">${r.note}</p>${r.basis ? `<p class="basis">${r.basis}</p>` : ''}</div>`).join('')}
-        </article>` : ''}
         <article class="read-card" style="margin-top:10px">
           <div class="read-head"><span class="read-icon">月</span><span class="read-label">2027년 힘이 되는 달</span></div>
           <div style="margin-top:12px">${f.months.map((m) => `<div class="month-row"><span class="m">${m.month}월</span><p><b style="color:var(--ink)">${m.label}</b><br>${m.body}</p></div>`).join('')}</div>
         </article>
         <p class="hint" style="text-align:center">나이는 한국식 세는 나이 기준이고, 좋은 달은 절기 기준이라 그 달 초순부터 시작해요.</p>`;
       box.hidden = false;
+      // MT 이후 올해 남은 두 달은 1페이지(사주와 나)에 따로 보여 준다
+      const rest = document.getElementById('rest');
+      rest.hidden = !f.rest?.length;
+      rest.innerHTML = f.rest?.length ? `
+        <h3>MT 이후 올해 남은 두 달</h3>
+        <p class="sub">11월 초부터 연말까지, 나에게 맞는 시기별 추천</p>
+        <article class="read-card">
+          <div class="read-head"><span class="read-icon">冬</span><span class="read-label">2026년 11~12월</span></div>
+          ${f.rest.map((r) => `<div class="cd"><span class="k">${r.period} · ${r.ganzhi}월 · ${r.label}</span><ul>${r.todo.map((t) => `<li>${t}</li>`).join('')}</ul><p class="more">${r.note}</p>${r.basis ? `<p class="basis">${r.basis}</p>` : ''}</div>`).join('')}
+        </article>` : '';
     }
 
     function renderSpecials(sp) {
