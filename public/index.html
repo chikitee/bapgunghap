@@ -575,16 +575,6 @@
         <p class="hint">시각을 알면 여덟 글자 모두로, 모르면 여섯 글자로 풀어요.</p>
       </div>
 
-      <div class="consent">
-        <strong>개인정보 수집·이용 안내</strong>
-        <ul>
-          <li>이름, 양력 생년월일, 태어난 시각(선택)을 사주 계산과 MT조 편성에만 써요. 성별은 궁합 계산과 MT조 편성에 써요.</li>
-          <li>MT조 편성 AI(Google Gemini)에는 무작위 번호, 성별, 일간·일지와 오행 개수만 보내요. 이름과 생년월일은 보내지 않아요.</li>
-          <li>생년월일과 사주 결과는 접근이 제한된 데이터베이스에만 보관하고, 운영 화면에는 이름과 성별만 보여요. 원본 생년월일은 편성 직후, 나머지는 프로젝트가 끝나면 삭제해요.</li>
-        </ul>
-        <label class="check consent-check"><input type="checkbox" id="consent"> 위 내용을 확인했고 개인정보 수집·이용에 동의해요</label>
-      </div>
-
       <div class="hp" aria-hidden="true">
         <label>웹사이트 <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
       </div>
@@ -924,7 +914,6 @@
     const timeInput = document.getElementById('birthTime');
     const timeUnknown = document.getElementById('timeUnknown');
     const dateInput = document.getElementById('birthDate');
-    const consent = document.getElementById('consent');
 
     // 링크를 몇 번 열었는지 세기 위한 기기별 무작위 번호(이름·생일과 연결하지 않음)
     let visitor = '';
@@ -969,7 +958,7 @@
     }
 
     function refreshButton() {
-      const ready = form.name.value.trim() && form.gender.value && parseDate(dateInput.value) && consent.checked
+      const ready = form.name.value.trim() && form.gender.value && parseDate(dateInput.value)
         && (timeUnknown.checked || parseTime(timeInput.value));
       submitBtn.disabled = !ready;
     }
@@ -1000,7 +989,6 @@
             gender: form.gender.value,
             birthDate: parseDate(dateInput.value),
             birthTime: timeUnknown.checked ? null : parseTime(timeInput.value),
-            consent: consent.checked,
             inviteCode,
             visitor,
             website: form.website.value,

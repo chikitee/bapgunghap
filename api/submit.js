@@ -10,7 +10,7 @@ import { readCareer } from '../lib/career.js';
 import { readFlow } from '../lib/flow.js';
 import { pairStory, groupEnergy, arrangeStories } from '../lib/compat.js';
 
-const CONSENT_VERSION = '2026-11-04-v7'; // v7: 동의 문구의 '밥조'를 'MT조'로만 바꿈(내용 같음)
+const CONSENT_VERSION = 'none-2026-11-04'; // 11/4 동의 안내·체크박스를 없앰(열 자체는 DB 제약 때문에 유지)
 const LIBRARY_VERSIONS = { manseryeok: '2.0.0', 'lunar-javascript': '1.7.7' };
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -61,7 +61,6 @@ export default async function handler(req, res) {
     await logView('open', String(body.visitor ?? '').slice(0, 40) || null, null);
     return res.status(200).json({ ok: true });
   }
-  if (body.consent !== true) return bad(res, 400, '개인정보 수집·이용에 동의해 주세요.');
 
   const input = parseInput(body);
   if (input.error) return bad(res, 400, input.error);
