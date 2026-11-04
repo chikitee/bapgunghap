@@ -425,11 +425,6 @@
     .read-card .cd b { color: var(--ink); }
     .read-card .cd ul { margin: 0; padding-left: 18px; }
     .read-card .cd li { margin: 2px 0; }
-    .read-card .roadmap { margin: 0; padding: 0; list-style: none; border-left: 2px solid var(--line); }
-    .read-card .roadmap li { position: relative; padding: 0 0 8px 14px; }
-    .read-card .roadmap li::before { content: ""; position: absolute; left: -6px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--seal); }
-    .read-card .roadmap b { display: block; font-size: 13px; }
-    .read-card .roadmap span { font-size: 14px; }
     .decade-chart { display: flex; align-items: flex-end; gap: 6px; height: 150px; padding: 14px 12px 0; background: #fff; border: 1px solid var(--line); border-radius: 16px 16px 0 0; border-bottom: 0; }
     .decade-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
     .decade-col .pin { font-size: 11px; font-weight: 700; color: var(--seal); white-space: nowrap; height: 16px; }
@@ -781,11 +776,9 @@
           `${f.rank === 1 ? `<p class="more">${c.trait}</p>` : ''}
           ${f.team ? `<div class="cd"><span class="k">추천 세부 팀</span><p><b>${f.team.name}</b><br>${f.team.why}</p></div>` : ''}
           ${f.strengths ? `<div class="cd"><span class="k">이런 순간에 강해요</span><ul>${f.strengths.map((x) => `<li>${x}</li>`).join('')}</ul></div>` : ''}
-          ${f.growth ? `<div class="cd"><span class="k">여기서 넓혀 갈 수 있는 길</span><p>${f.growth}</p></div>` : ''}
           <p class="basis">${f.basis}</p>`)).join('')}
         ${card('路', '그다음 커리어 · 파트너 vs 이직 vs 개업', c.path.title, c.path.body,
-          `${c.path.roadmap ? `<div class="cd"><span class="k">연차별 로드맵</span><ol class="roadmap">${c.path.roadmap.map(([when, what]) => `<li><b>${when}</b><span>${what}</span></li>`).join('')}</ol></div>` : ''}
-          ${c.path.weapon ? `<div class="cd"><span class="k">이 길에서 나의 무기</span><p>${c.path.weapon}</p></div>` : ''}
+          `${c.path.weapon ? `<div class="cd"><span class="k">이 길에서 나의 무기</span><p>${c.path.weapon}</p></div>` : ''}
           ${c.path.prepare ? `<div class="cd"><span class="k">지금부터 준비할 것</span><p>${c.path.prepare}</p></div>` : ''}
           ${c.path.timing ? `<div class="cd"><span class="k">큰 결정 타이밍</span><p>${c.path.timing}</p></div>` : ''}
           ${c.path.planB ? `<p class="more">${c.path.planB}</p>` : ''}
