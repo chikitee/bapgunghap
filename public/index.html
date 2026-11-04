@@ -726,8 +726,7 @@
         ${card('路', '파트너 vs 이직 vs 개업', c.path.title, c.path.body, `<p class="basis">${c.path.basis}</p>`)}
         ${card('手', '일하는 스타일', c.style.title, c.style.body)}
         ${card('忙', '바쁜 시즌 버티는 법', '나만의 충전법', c.busy)}
-        ${card('丁', '2027년 커리어 흐름', '내년의 나', c.year,
-          c.calendar ? `<div style="margin-top:12px">${c.calendar.map((e) => `<div class="month-row"><span class="m" style="font-size:12.5px;min-width:58px">${e.when}</span><p><b style="color:var(--ink)">${e.event}</b><br>${e.body}</p></div>`).join('')}</div>` : '')}`;
+        ${card('丁', '2027년 커리어 흐름', '내년의 나', c.year)}`;
       box.hidden = false;
     }
 
@@ -757,7 +756,7 @@
         <ul class="decade-list">${list}</ul>
         <article class="read-card" style="margin-top:10px">
           <div class="read-head"><span class="read-icon">月</span><span class="read-label">2027년 힘이 되는 달</span></div>
-          <div style="margin-top:12px">${f.months.map((m) => `<div class="month-row"><span class="m">${m.month}월</span><p>${m.body}</p></div>`).join('')}</div>
+          <div style="margin-top:12px">${f.months.map((m) => `<div class="month-row"><span class="m">${m.month}월</span><p><b style="color:var(--ink)">${m.label}</b><br>${m.body}</p></div>`).join('')}</div>
         </article>
         <p class="hint" style="text-align:center">나이는 한국식 세는 나이 기준이고, 좋은 달은 절기 기준이라 그 달 초순부터 시작해요.</p>`;
       box.hidden = false;
