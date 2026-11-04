@@ -6,6 +6,8 @@ import { findIdealMatch } from '../lib/match.js';
 import { readSaju } from '../lib/reading.js';
 import { readSpecials } from '../lib/specials.js';
 import { readCharacter } from '../lib/character.js';
+import { readCareer } from '../lib/career.js';
+import { readFlow } from '../lib/flow.js';
 import { pairStory, groupEnergy } from '../lib/compat.js';
 
 const CONSENT_VERSION = '2026-11-02-v6';
@@ -127,6 +129,8 @@ function sendResult(res, saju, gender, alreadySubmitted, bapjo = null) {
     reading: readSaju(saju, gender),
     specials: readSpecials(saju, gender),
     character: readCharacter(saju),
+    career: readCareer(saju),
+    flow: readFlow(saju, saju.birthYear),
     bapjo,
   });
 }

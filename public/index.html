@@ -403,6 +403,29 @@
     .year-row { display: flex; gap: 10px; font-size: 14.5px; }
     .year-row + .year-row { margin-top: 8px; }
     .year-row span { flex: none; width: 34px; font-weight: 700; color: #f6d9cf; }
+    .career, .flow { margin-top: 26px; padding-top: 22px; border-top: 1px dashed var(--line); }
+    .career h3, .flow h3 { font-family: "Gowun Batang", serif; font-size: 19px; margin: 0 0 4px; text-align: center; }
+    .career .sub, .flow .sub { text-align: center; font-size: 13.5px; color: var(--ink-faint); margin: 0 0 16px; }
+    .tag { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 12px; font-weight: 700; background: var(--paper-deep); color: var(--ink-soft); }
+    .tag.peak { background: var(--seal); color: #fbefe6; }
+    .read-card .basis { margin-top: 8px; font-size: 13px; color: var(--ink-faint); }
+    .read-card .more { margin-top: 8px; }
+    .decade-chart { display: flex; align-items: flex-end; gap: 6px; height: 150px; padding: 14px 12px 0; background: #fff; border: 1px solid var(--line); border-radius: 16px 16px 0 0; border-bottom: 0; }
+    .decade-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+    .decade-col .pin { font-size: 11px; font-weight: 700; color: var(--seal); white-space: nowrap; height: 16px; }
+    .decade-col .col { width: 100%; max-width: 38px; border-radius: 8px 8px 0 0; background: linear-gradient(180deg, #c98f6d, #e8d2bd); height: 0; transition: height 1.2s cubic-bezier(.2,.8,.2,1); }
+    .decade-col.now .col { background: linear-gradient(180deg, #2f2a24, #8f877a); }
+    .decade-col.peak .col { background: linear-gradient(180deg, #7e2418, var(--seal)); }
+    .decade-axis { display: flex; gap: 6px; padding: 6px 12px 12px; background: #fff; border: 1px solid var(--line); border-top: 1px solid var(--line); border-radius: 0 0 16px 16px; }
+    .decade-axis span { flex: 1; min-width: 0; text-align: center; font-size: 11.5px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+    .decade-list { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+    .decade-list li { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 14px; color: var(--ink-soft); }
+    .decade-list li b { color: var(--ink); font-size: 14.5px; margin-right: 6px; }
+    .decade-list li p { margin: 4px 0 0; }
+    .month-row { display: flex; gap: 12px; align-items: flex-start; }
+    .month-row + .month-row { margin-top: 10px; }
+    .month-row .m { flex: none; min-width: 44px; padding: 0 6px; box-sizing: border-box; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--seal); color: #fbefe6; font-family: "Noto Serif KR", serif; font-weight: 900; font-size: 16px; }
+    .month-row p { margin: 0; font-size: 14.5px; color: var(--ink-soft); }
     .match { margin-top: 26px; padding-top: 22px; border-top: 1px dashed var(--line); }
     .match h3 { font-family: "Gowun Batang", serif; font-size: 19px; margin: 0 0 4px; text-align: center; }
     .match .sub { text-align: center; font-size: 13.5px; color: var(--ink-faint); margin: 0 0 18px; }
@@ -562,6 +585,8 @@
         <div id="bars"></div>
       </div>
       <div class="reading" id="reading"></div>
+      <div class="career" id="career" hidden></div>
+      <div class="flow" id="flow" hidden></div>
       <div class="specials" id="specials"></div>
       <div class="match" id="match"></div>
       <p class="next" id="next">입력 완료! 모두 입력하면 <b>AI가 기운이 잘 맞는 밥조</b>를 짜요.<br>편성이 끝난 뒤 같은 정보로 다시 입력하면 내 밥조를 볼 수 있어요.</p>
@@ -664,10 +689,10 @@
 
     function renderReading(r) {
       if (!r) return;
-      const cards = [['緣', '연애·결혼운', r.love], ['財', '재물운', r.money], ['業', '직업운', r.career]];
+      const cards = [['緣', '연애·결혼운', r.love], ['財', '재물운', r.money]];
       document.getElementById('reading').innerHTML = `
         <h3>나의 사주 풀이</h3>
-        <p class="sub">재미로 보는 연애·돈·일 이야기</p>
+        <p class="sub">재미로 보는 연애·돈 이야기</p>
         ${cards.map(([icon, label, c]) => `
           <article class="read-card">
             <div class="read-head"><span class="read-icon">${icon}</span><span class="read-label">${label}</span></div>
@@ -682,6 +707,59 @@
       box.style.setProperty('--char', COLOR[ELEMENT_OF[stem]]);
       box.innerHTML = `<div class="emoji" aria-hidden="true">${c.emoji}</div>
         <div><p class="label">나의 일주 동물</p><strong>${c.title}</strong><p class="body">${c.body}</p></div>`;
+      box.hidden = false;
+    }
+
+    function renderCareer(c) {
+      const box = document.getElementById('career');
+      if (!c) { box.hidden = true; return; }
+      const card = (icon, label, title, body, extra = '') => `
+        <article class="read-card">
+          <div class="read-head"><span class="read-icon">${icon}</span><span class="read-label">${label}</span></div>
+          <h4>${title}</h4><p>${body}</p>${extra}
+        </article>`;
+      box.innerHTML = `
+        <h3>회계사로 보는 나의 커리어</h3>
+        <p class="sub">감사, 세무, 딜, 컨설팅 중 나에게 맞는 길은?</p>
+        ${card('業', `잘 맞는 분야 · ${c.field.label}`, c.field.title, c.field.body,
+          `<p class="more">${c.field.trait}</p>${c.field.extra ? `<p class="more">${c.field.extra}</p>` : ''}`)}
+        ${card('路', '파트너 vs 이직 vs 개업', c.path.title, c.path.body, `<p class="basis">${c.path.basis}</p>`)}
+        ${card('手', '일하는 스타일', c.style.title, c.style.body)}
+        ${card('忙', '바쁜 시즌 버티는 법', '나만의 충전법', c.busy)}
+        ${card('丁', '2027년 커리어 흐름', '내년의 나', c.year,
+          c.calendar ? `<div style="margin-top:12px">${c.calendar.map((e) => `<div class="month-row"><span class="m" style="font-size:12.5px;min-width:58px">${e.when}</span><p><b style="color:var(--ink)">${e.event}</b><br>${e.body}</p></div>`).join('')}</div>` : '')}`;
+      box.hidden = false;
+    }
+
+    function renderFlow(f) {
+      const box = document.getElementById('flow');
+      if (!f || !f.decades?.length) { box.hidden = true; return; }
+      const cols = f.decades.map((d) => `
+        <div class="decade-col${d.now ? ' now' : ''}${d.peak ? ' peak' : ''}">
+          <span class="pin">${d.peak ? '황금기' : d.now ? '지금' : ''}</span>
+          <div class="col" data-h="${d.level}"></div>
+        </div>`).join('');
+      const axis = f.decades.map((d) => `<span>${d.from}~${d.to}</span>`).join('');
+      const list = f.decades.map((d) => `
+        <li><b>${d.from}~${d.to}세 ${d.name}</b>${d.peak ? '<span class="tag peak">황금기</span>' : d.now ? '<span class="tag">지금</span>' : ''}
+          <p>${d.career}</p></li>`).join('');
+      box.innerHTML = `
+        <h3>나의 기운과 인생 흐름</h3>
+        <p class="sub">10년마다 바뀌는 운의 흐름(대운)과 2027년 좋은 달</p>
+        <article class="read-card">
+          <div class="read-head"><span class="read-icon">氣</span><span class="read-label">나의 기운</span></div>
+          <h4>${f.energy.title}</h4><p>${f.energy.body}</p><p class="more">${f.energy.help}</p>
+        </article>
+        <div style="margin-top:10px">
+          <div class="decade-chart">${cols}</div>
+          <div class="decade-axis">${axis}</div>
+        </div>
+        <ul class="decade-list">${list}</ul>
+        <article class="read-card" style="margin-top:10px">
+          <div class="read-head"><span class="read-icon">月</span><span class="read-label">2027년 힘이 되는 달</span></div>
+          <div style="margin-top:12px">${f.months.map((m) => `<div class="month-row"><span class="m">${m.month}월</span><p>${m.body}</p></div>`).join('')}</div>
+        </article>
+        <p class="hint" style="text-align:center">나이는 한국식 세는 나이 기준이고, 좋은 달은 절기 기준이라 그 달 초순부터 시작해요.</p>`;
       box.hidden = false;
     }
 
@@ -860,6 +938,8 @@
         <div><strong>${HANJA[el]}(${el}) 기운을 타고난 사람</strong><p>${data.reading?.personality.body ?? DAY_MASTER_TEXT[dm] ?? ''}</p></div>`;
 
       renderReading(data.reading);
+      renderCareer(data.career);
+      renderFlow(data.flow);
       renderSpecials(data.specials);
 
       const max = Math.max(...Object.values(data.elements), 1);
@@ -877,6 +957,7 @@
       result.scrollIntoView({ behavior: 'smooth', block: 'start' });
       requestAnimationFrame(() => setTimeout(() => {
         document.querySelectorAll('.bar .fill, .charm-fill').forEach((f) => { f.style.width = `${f.dataset.w}%`; });
+        document.querySelectorAll('.decade-col .col').forEach((c) => { c.style.height = `${c.dataset.h * 0.85}%`; });
       }, 300));
     }
   </script>
