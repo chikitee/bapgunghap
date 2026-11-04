@@ -749,6 +749,7 @@
             <div class="read-head"><span class="read-icon">${icon}</span><span class="read-label">${label}</span></div>
             <h4>${c.headline}</h4>
             <p>${c.body}</p>
+            ${(c.points || []).map((x) => `<div class="cd"><span class="k">${x.label}</span><p>${x.text}</p>${x.basis ? `<p class="basis">근거: ${x.basis}</p>` : ''}</div>`).join('')}
           </article>`).join('')}`;
     }
 
