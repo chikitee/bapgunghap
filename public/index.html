@@ -267,6 +267,13 @@
     .result-head { text-align: center; margin-bottom: 22px; }
     .result-head .eyebrow { margin-bottom: 4px; letter-spacing: .08em; font-size: 14px; }
     .result-head h2 { font-size: 24px; }
+    .fold > summary { list-style: none; cursor: pointer; text-align: center; }
+    .fold > summary::-webkit-details-marker { display: none; }
+    .fold > summary::after { content: "눌러서 펼치기 ▾"; display: inline-block; margin-top: 2px; padding: 4px 12px; border-radius: 99px; font-size: 12.5px; font-weight: 700; color: var(--seal); background: var(--paper-deep); }
+    .fold[open] > summary::after { content: "접기 ▴"; margin-bottom: 14px; }
+    .fold > summary .sub { margin-bottom: 8px !important; }
+    .saju-fold { margin-top: 4px; }
+    .saju-fold > summary h2 { font-size: 24px; margin: 0 0 4px; }
     .again[hidden], .character[hidden] { display: none; }
     .again { display: inline-block; margin: 0 0 10px; padding: 6px 12px; border-radius: 99px; background: var(--paper-deep); font-size: 13px; color: var(--ink-soft); }
 
@@ -599,14 +606,16 @@
         <p class="again" id="again" hidden>이미 참여했어요. 처음 저장된 결과를 다시 보여드려요.</p>
         <div class="bapjo" id="bapjo" hidden></div>
         <div class="character" id="character" hidden></div>
-        <h2>나의 사주 여덟 글자</h2>
       </div>
-      <div class="pillars" id="pillars"></div>
-      <div class="daymaster" id="daymaster"></div>
-      <div class="bars">
-        <h3>나의 오행 분포</h3>
-        <div id="bars"></div>
-      </div>
+      <details class="fold saju-fold">
+        <summary><h2>나의 사주 여덟 글자</h2><p class="sub">타고난 글자와 오행 분포</p></summary>
+        <div class="pillars" id="pillars"></div>
+        <div class="daymaster" id="daymaster"></div>
+        <div class="bars">
+          <h3>나의 오행 분포</h3>
+          <div id="bars"></div>
+        </div>
+      </details>
       <div class="reading" id="reading"></div>
       <div class="career" id="career" hidden></div>
       <div class="flow" id="flow" hidden></div>
@@ -702,6 +711,21 @@
         row.append(name, ul);
         pairs.appendChild(row);
       });
+    }
+
+    // 섹션의 첫 제목(h3)과 부제를 '눌러서 펼치기' 머리로 삼아 나머지 내용을 접는다
+    function foldSection(el) {
+      if (!el || el.hidden || !el.firstElementChild || el.querySelector(':scope > details.fold')) return;
+      const h3 = el.querySelector(':scope > h3');
+      if (!h3) return;
+      const details = document.createElement('details');
+      details.className = 'fold';
+      const summary = document.createElement('summary');
+      const sub = h3.nextElementSibling?.classList.contains('sub') ? h3.nextElementSibling : null;
+      summary.append(h3);
+      if (sub) summary.append(sub);
+      details.append(summary, ...el.childNodes);
+      el.append(details);
     }
 
     function renderReading(r) {
@@ -999,6 +1023,8 @@
       renderBapjo(data.bapjo);
       renderCharacter(data.character, data.pillars.day[0]);
       renderMatch({ ...data, gender: form.gender.value });
+      // 밥조와 커리어만 펼쳐 두고, 나머지 풀이는 제목만 보이게 접어 둔다
+      ['reading', 'flow', 'specials', 'match'].forEach((id) => foldSection(document.getElementById(id)));
 
       const result = document.getElementById('result');
       result.classList.add('show');

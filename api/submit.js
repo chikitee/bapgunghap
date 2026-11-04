@@ -8,7 +8,7 @@ import { readSpecials } from '../lib/specials.js';
 import { readCharacter } from '../lib/character.js';
 import { readCareer } from '../lib/career.js';
 import { readFlow } from '../lib/flow.js';
-import { pairStory, groupEnergy } from '../lib/compat.js';
+import { pairStory, groupEnergy, arrangeStories } from '../lib/compat.js';
 
 const CONSENT_VERSION = '2026-11-02-v6';
 const LIBRARY_VERSIONS = { manseryeok: '2.0.0', 'lunar-javascript': '1.7.7' };
@@ -157,20 +157,23 @@ async function findBapjo(participantId) {
   const me = rows.find((m) => m.participant_id === participantId);
   const myPerson = me && person(me);
   const people = rows.map(person).filter(Boolean);
+  // 겹치는 궁합 문장은 한 번만 보여 준다
+  const sorted = rows
+    .map((m) => {
+      const isMe = m.participant_id === participantId;
+      const other = person(m);
+      const story = !isMe && myPerson && other ? pairStory(myPerson, other) : null;
+      return { name: m.participants?.display_name ?? '', me: isMe, score: story?.score ?? null, story };
+    })
+    // 나 다음은 궁합이 잘 맞는 순서로 보여 준다. 점수와 '최고 궁합' 같은 문구는 내려보내지 않는다.
+    .sort((a, b) => (b.me - a.me) || ((b.score ?? 0) - (a.score ?? 0)));
+  const withStory = sorted.filter((m) => m.story);
+  const arranged = new Map(arrangeStories(withStory.map((m) => m.story)).map((lines, i) => [withStory[i], lines]));
   return {
     name: mine.group_name,
     reason: mine.group_reason,
     energy: people.length ? groupEnergy(people).text : null,
-    members: rows
-      .map((m) => {
-        const isMe = m.participant_id === participantId;
-        const other = person(m);
-        const story = !isMe && myPerson && other ? pairStory(myPerson, other) : null;
-        return { name: m.participants?.display_name ?? '', me: isMe, score: story?.score ?? null, lines: story?.lines ?? [] };
-      })
-      // 나 다음은 궁합이 잘 맞는 순서로 보여 준다. 점수와 '최고 궁합' 같은 문구는 내려보내지 않는다.
-      .sort((a, b) => (b.me - a.me) || ((b.score ?? 0) - (a.score ?? 0)))
-      .map(({ score, ...rest }) => rest),
+    members: sorted.map((m) => ({ name: m.name, me: m.me, lines: arranged.get(m) ?? [] })),
   };
 }
 
