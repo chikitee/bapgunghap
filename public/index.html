@@ -267,13 +267,16 @@
     .result-head { text-align: center; margin-bottom: 22px; }
     .result-head .eyebrow { margin-bottom: 4px; letter-spacing: .08em; font-size: 14px; }
     .result-head h2 { font-size: 24px; }
-    .fold > summary { list-style: none; cursor: pointer; text-align: center; }
-    .fold > summary::-webkit-details-marker { display: none; }
-    .fold > summary::after { content: "눌러서 펼치기 ▾"; display: inline-block; margin-top: 2px; padding: 4px 12px; border-radius: 99px; font-size: 12.5px; font-weight: 700; color: var(--seal); background: var(--paper-deep); }
-    .fold[open] > summary::after { content: "접기 ▴"; margin-bottom: 14px; }
-    .fold > summary .sub { margin-bottom: 8px !important; }
-    .saju-fold { margin-top: 4px; }
-    .saju-fold > summary h2 { font-size: 24px; margin: 0 0 4px; }
+    .page-off { display: none !important; }
+    .tabs { position: sticky; top: 0; z-index: 5; display: flex; gap: 6px; margin: 14px -4px 16px; padding: 8px 4px; background: var(--card); }
+    .tabs[hidden] { display: none; }
+    .tabs button { flex: 1; min-width: 0; padding: 9px 4px; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink-soft); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+    .tabs button span { display: inline-block; margin-right: 4px; color: var(--ink-faint); font-size: 12px; }
+    .tabs button.on { background: var(--ink); border-color: var(--ink); color: #fbefe6; }
+    .tabs button.on span { color: #e8d2bd; }
+    .next-page { display: block; width: 100%; margin: 26px 0 4px; padding: 15px; border: 0; border-radius: 14px; background: var(--seal); color: #fbefe6; font: inherit; font-size: 15.5px; font-weight: 700; cursor: pointer; }
+    .next-page[hidden] { display: none; }
+    .saju-block > h2 { font-size: 24px; text-align: center; margin: 0 0 14px; }
     .again[hidden], .character[hidden] { display: none; }
     .again { display: inline-block; margin: 0 0 10px; padding: 6px 12px; border-radius: 99px; background: var(--paper-deep); font-size: 13px; color: var(--ink-soft); }
 
@@ -439,10 +442,6 @@
     .decade-list li { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 14px; color: var(--ink-soft); }
     .decade-list li b { color: var(--ink); font-size: 14.5px; margin-right: 6px; }
     .decade-list li p { margin: 4px 0 0; }
-    .decade-list summary { cursor: pointer; list-style: none; position: relative; padding-right: 52px; }
-    .decade-list summary::-webkit-details-marker { display: none; }
-    .decade-list summary::after { content: "자세히 ▾"; position: absolute; right: 0; top: 2px; font-size: 12px; color: var(--ink-faint); }
-    .decade-list details[open] summary::after { content: "접기 ▴"; }
     .decade-list .d-meta { display: block; font-size: 12.5px; color: var(--ink-faint); margin-top: 3px; }
     .decade-list .d-career { color: var(--ink); }
     .decade-list .half { display: flex; gap: 10px; margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: var(--paper-deep); }
@@ -604,23 +603,25 @@
       <div class="result-head">
         <p class="eyebrow" id="result-name"></p>
         <p class="again" id="again" hidden>이미 참여했어요. 처음 저장된 결과를 다시 보여드려요.</p>
+        <nav class="tabs" id="tabs" hidden></nav>
         <div class="bapjo" id="bapjo" hidden></div>
         <div class="character" id="character" hidden></div>
       </div>
-      <details class="fold saju-fold">
-        <summary><h2>나의 사주 여덟 글자</h2><p class="sub">타고난 글자와 오행 분포</p></summary>
+      <div class="saju-block" id="saju-block">
+        <h2>나의 사주 여덟 글자</h2>
         <div class="pillars" id="pillars"></div>
         <div class="daymaster" id="daymaster"></div>
         <div class="bars">
           <h3>나의 오행 분포</h3>
           <div id="bars"></div>
         </div>
-      </details>
+      </div>
       <div class="reading" id="reading"></div>
       <div class="career" id="career" hidden></div>
       <div class="flow" id="flow" hidden></div>
       <div class="specials" id="specials"></div>
       <div class="match" id="match"></div>
+      <button type="button" class="next-page" id="next-page" hidden></button>
       <p class="next" id="next">입력 완료! 모두 입력하면 <b>AI가 기운이 잘 맞는 밥조</b>를 짜요.<br>편성이 끝난 뒤 같은 정보로 다시 입력하면 내 밥조를 볼 수 있어요.</p>
     </section>
 
@@ -713,19 +714,33 @@
       });
     }
 
-    // 섹션의 첫 제목(h3)과 부제를 '눌러서 펼치기' 머리로 삼아 나머지 내용을 접는다
-    function foldSection(el) {
-      if (!el || el.hidden || !el.firstElementChild || el.querySelector(':scope > details.fold')) return;
-      const h3 = el.querySelector(':scope > h3');
-      if (!h3) return;
-      const details = document.createElement('details');
-      details.className = 'fold';
-      const summary = document.createElement('summary');
-      const sub = h3.nextElementSibling?.classList.contains('sub') ? h3.nextElementSibling : null;
-      summary.append(h3);
-      if (sub) summary.append(sub);
-      details.append(summary, ...el.childNodes);
-      el.append(details);
+    // 결과가 길어서 세 페이지로 나눈다. 위에는 탭, 아래에는 다음 페이지 버튼.
+    const PAGES = [
+      { label: '밥조·커리어', ids: ['bapjo', 'career', 'next'] },
+      { label: '인생 흐름', ids: ['flow'] },
+      { label: '사주와 나', ids: ['character', 'saju-block', 'reading', 'specials', 'match'] },
+    ];
+    function setupPages(hasBapjo) {
+      const labels = PAGES.map((p, i) => (i === 0 && !hasBapjo ? '커리어' : p.label));
+      const tabs = document.getElementById('tabs');
+      const nextBtn = document.getElementById('next-page');
+      const show = (n, scroll) => {
+        PAGES.forEach((p, i) => p.ids.forEach((id) => document.getElementById(id)?.classList.toggle('page-off', i !== n)));
+        tabs.querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', i === n));
+        nextBtn.hidden = n === PAGES.length - 1;
+        nextBtn.textContent = `다음 페이지 · ${labels[n + 1] ?? ''} →`;
+        nextBtn.onclick = () => show(n + 1, true);
+        if (scroll) tabs.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // 숨겨져 있던 그래프는 보일 때 다시 그린다
+        requestAnimationFrame(() => setTimeout(() => {
+          document.querySelectorAll('.bar .fill, .charm-fill').forEach((f) => { f.style.width = `${f.dataset.w}%`; });
+          document.querySelectorAll('.decade-col .col').forEach((c) => { c.style.height = `${c.dataset.h * 0.85}%`; });
+        }, 50));
+      };
+      tabs.innerHTML = labels.map((l, i) => `<button type="button"><span>${i + 1}</span>${l}</button>`).join('');
+      tabs.querySelectorAll('button').forEach((b, i) => { b.onclick = () => show(i, true); });
+      tabs.hidden = false;
+      show(0, false);
     }
 
     function renderReading(r) {
@@ -796,19 +811,19 @@
           <div class="half${d.nowHalf === i ? ' on' : ''}"><span class="h-label">${h.label}<br><small>${h.years}</small></span>
             <p><b>${h.el}</b> ${h.text}<br><small>${h.note}${d.nowHalf === i ? ' 지금 여기예요.' : ''}</small></p></div>`).join('');
         return `
-        <li><details${d.now ? ' open' : ''}>
-          <summary><b>${d.from}~${d.to}세 ${d.name}</b>${tag}<span class="d-meta">${d.years || ''}${d.ganzhi ? ` · ${d.ganzhi} 대운(${d.elements})` : ''}</span></summary>
+        <li><div>
+          <div class="d-sum"><b>${d.from}~${d.to}세 ${d.name}</b>${tag}<span class="d-meta">${d.years || ''}${d.ganzhi ? ` · ${d.ganzhi} 대운(${d.elements})` : ''}</span></div>
           <p>${d.body}</p>
           <p class="d-career">${d.career}</p>
           ${halves}
           ${d.tip ? `<p class="d-tip">이렇게 써 보세요. ${d.tip}</p>` : ''}
-        </details></li>`;
+        </div></li>`;
       }).join('');
       const intro = f.intro ? `
         <article class="read-card" style="margin-top:10px">
           <div class="read-head"><span class="read-icon">運</span><span class="read-label">대운이 뭐예요?</span></div>
           <p>대운은 태어난 달에서 출발해 <b>10년마다 바뀌는 큰 운의 계절</b>이에요. 10년 중 앞 5년은 하늘 기운(천간), 뒤 5년은 땅 기운(지지)이 더 크게 작용한다고 봐요.${f.intro.start ? ` 내 대운은 <b>${f.intro.start}세</b>에 시작해요.` : ''}</p>
-          <p class="more">${f.intro.why} 막대가 낮은 시기는 나쁜 때가 아니라 기본기를 다지는 때예요. 시기를 누르면 자세한 풀이가 열려요.</p>
+          <p class="more">${f.intro.why} 막대가 낮은 시기는 나쁜 때가 아니라 기본기를 다지는 때예요.</p>
         </article>` : '';
       box.innerHTML = `
         <h3>나의 기운과 인생 흐름</h3>
@@ -1021,8 +1036,7 @@
       renderBapjo(data.bapjo);
       renderCharacter(data.character, data.pillars.day[0]);
       renderMatch({ ...data, gender: form.gender.value });
-      // 밥조와 커리어만 펼쳐 두고, 나머지 풀이는 제목만 보이게 접어 둔다
-      ['reading', 'flow', 'specials', 'match'].forEach((id) => foldSection(document.getElementById(id)));
+      setupPages(!!data.bapjo);
 
       const result = document.getElementById('result');
       result.classList.add('show');
