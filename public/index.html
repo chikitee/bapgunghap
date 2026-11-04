@@ -926,10 +926,22 @@
     const dateInput = document.getElementById('birthDate');
     const consent = document.getElementById('consent');
 
+    // 링크를 몇 번 열었는지 세기 위한 기기별 무작위 번호(이름·생일과 연결하지 않음)
+    let visitor = '';
+    try {
+      visitor = localStorage.getItem('mt-visitor') || '';
+      if (!visitor) { visitor = Math.random().toString(36).slice(2, 12); localStorage.setItem('mt-visitor', visitor); }
+    } catch {}
+
     if (!inviteCode) {
       document.getElementById('no-invite').hidden = false;
     } else {
       form.hidden = false;
+      fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'view', inviteCode, visitor }),
+      }).catch(() => {});
     }
 
     // 숫자만 입력받아 2001.03.15, 14:30 형태로 자동 정리한다.
@@ -990,6 +1002,7 @@
             birthTime: timeUnknown.checked ? null : parseTime(timeInput.value),
             consent: consent.checked,
             inviteCode,
+            visitor,
             website: form.website.value,
           }),
         });

@@ -56,6 +56,11 @@ export default async function handler(req, res) {
   if (!process.env.INVITE_CODE || body.inviteCode !== process.env.INVITE_CODE) {
     return bad(res, 403, '초대 링크로 접속해 주세요.');
   }
+  // 초대 링크를 연 횟수 기록. 이름·IP는 남기지 않고 기기별 무작위 번호만 남긴다.
+  if (body.action === 'view') {
+    await logView('open', String(body.visitor ?? '').slice(0, 40) || null, null);
+    return res.status(200).json({ ok: true });
+  }
   if (body.consent !== true) return bad(res, 400, '개인정보 수집·이용에 동의해 주세요.');
 
   const input = parseInput(body);
@@ -70,7 +75,10 @@ export default async function handler(req, res) {
 
   const existing = await findExisting(input.name, saju, input.gender);
   if (existing.exists) {
-    if (existing.same) return sendResult(res, saju, input.gender, true, await findBapjo(existing.id));
+    if (existing.same) {
+      await logView('result', String(body.visitor ?? '').slice(0, 40) || null, existing.id);
+      return sendResult(res, saju, input.gender, true, await findBapjo(existing.id));
+    }
     return bad(res, 409, '같은 이름으로 이미 참여한 사람이 있어요. 본인이라면 처음 입력한 정보 그대로, 다른 사람이라면 이름 뒤에 숫자를 붙여 입력해 주세요.');
   }
   // 이름만 다르고 생일·시각·성별이 같은 기록이 있으면 닉네임을 잘못 쓴 경우가 대부분이다.
@@ -113,7 +121,15 @@ export default async function handler(req, res) {
     return bad(res, 500, '저장 중 문제가 생겼어요. 잠시 후 다시 시도해 주세요.');
   }
 
+  await logView('result', String(body.visitor ?? '').slice(0, 40) || null, id);
   return sendResult(res, saju, input.gender, false);
+}
+
+// 조회 기록은 부가 기능이라 실패해도(테이블이 아직 없어도) 본 기능은 그대로 동작한다.
+async function logView(kind, visitor, participantId) {
+  try {
+    await supabase.from('link_views').insert({ kind, visitor, participant_id: participantId });
+  } catch {}
 }
 
 function sendResult(res, saju, gender, alreadySubmitted, bapjo = null) {

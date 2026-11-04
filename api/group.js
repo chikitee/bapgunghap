@@ -27,6 +27,28 @@ async function loadParticipants() {
   return data.filter((p) => p.saju_results);
 }
 
+// 링크 열람·결과 조회 횟수. 테이블이 아직 없으면 null을 돌려준다.
+async function loadViews() {
+  const { data, error } = await supabase.from('link_views').select('kind, visitor, participant_id, created_at').limit(20000);
+  if (error) return null;
+  const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10); // 한국 날짜
+  const isToday = (t) => new Date(new Date(t).getTime() + 9 * 3600e3).toISOString().slice(0, 10) === today;
+  const opens = data.filter((v) => v.kind === 'open');
+  const results = data.filter((v) => v.kind === 'result');
+  const byPerson = new Map();
+  for (const v of results) if (v.participant_id) byPerson.set(v.participant_id, (byPerson.get(v.participant_id) ?? 0) + 1);
+  return {
+    byPerson,
+    summary: {
+      opens: opens.length,
+      openDevices: new Set(opens.map((v) => v.visitor).filter(Boolean)).size,
+      opensToday: opens.filter((v) => isToday(v.created_at)).length,
+      results: results.length,
+      resultsToday: results.filter((v) => isToday(v.created_at)).length,
+    },
+  };
+}
+
 // 실제 ID 대신 쓸 가명 번호를 무작위로 섞어 붙인다. 매 실행마다 바뀐다.
 function pseudonymize(rows) {
   const shuffled = [...rows];
@@ -66,10 +88,13 @@ export default async function handler(req, res) {
 
   // 운영자에게도 참여자의 사주 결과는 보여주지 않는다. 이름, 성별, 계산 검증 여부만 보여준다.
   if (body.action === 'status') {
+    const views = await loadViews();
     return res.status(200).json({
       count: rows.length,
+      views: views && views.summary,
       participants: rows.map((r) => ({
         name: r.display_name,
+        views: views ? (views.byPerson.get(r.id) ?? 0) : null,
         gender: r.saju_results.gender,
         crossCheckOk: r.saju_results.cross_check_ok,
       })),

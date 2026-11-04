@@ -80,3 +80,13 @@ alter table bapjo_assignments enable row level security;
 -- 2026-10-30 변경: 테이블을 이미 만들었다면 아래 두 줄만 실행한다.
 -- delete from participants;  -- 성별 없는 테스트 데이터 정리
 -- alter table saju_results add column if not exists gender text not null check (gender in ('male', 'female'));
+
+-- 2026-11-04 추가: 링크 열람·결과 조회 횟수(운영자 화면 표시용). 이름·IP는 남기지 않는다.
+create table if not exists link_views (
+  id bigint generated always as identity primary key,
+  kind text not null check (kind in ('open', 'result')),  -- open: 초대 링크 열람, result: 결과 조회
+  visitor text,               -- 기기별 무작위 번호(브라우저 저장소)
+  participant_id uuid references participants(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table link_views enable row level security;
