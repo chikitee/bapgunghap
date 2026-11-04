@@ -99,9 +99,12 @@ export default async function handler(req, res) {
   }
 
   if (body.action !== 'run') return res.status(400).json({ error: '알 수 없는 요청이에요.' });
-  if (rows.length < 4) return res.status(400).json({ error: '편성하려면 최소 4명이 필요해요.' });
+  // MT에 오지 않는 사람처럼 운영자가 뺀 사람은 편성 대상에서 제외한다. 기록은 지우지 않는다.
+  const excluded = new Set(Array.isArray(body.exclude) ? body.exclude : []);
+  const targets = rows.filter((r) => !excluded.has(r.display_name));
+  if (targets.length < 4) return res.status(400).json({ error: '편성하려면 최소 4명이 필요해요.' });
 
-  const { people, realIdOf } = pseudonymize(rows);
+  const { people, realIdOf } = pseudonymize(targets);
   const model = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
   const startedAt = Date.now();
 

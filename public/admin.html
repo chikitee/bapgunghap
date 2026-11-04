@@ -73,6 +73,8 @@
       font-size: 17px; line-height: 1; color: var(--ink-faint); cursor: pointer;
     }
     .chip .x:hover { color: var(--seal); }
+    .chip.off { opacity: .45; text-decoration: line-through; }
+    .chip .nm { cursor: pointer; }
     .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
     .stat { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px; text-align: center; }
     .stat b { display: block; font-family: "Noto Serif KR", serif; font-size: 26px; font-weight: 900; line-height: 1.2; }
@@ -108,6 +110,8 @@
     <section class="card" id="status" hidden>
       <h2>참여 현황 <span id="count"></span></h2>
       <p class="muted">빨간 테두리는 두 라이브러리의 계산이 달라 확인이 필요한 사람이에요. 이름 옆 ×를 누르면 그 사람의 기록을 모두 지워요.</p>
+      <p class="muted"><b>MT에 오지 않는 사람은 이름을 눌러 편성에서 빼 주세요.</b> 기록은 그대로 남고, 다시 누르면 돌아와요.</p>
+      <p class="muted" id="target-count"></p>
       <div class="chips" id="people"></div>
     </section>
 
@@ -142,11 +146,16 @@
   <script>
     let password = '';
     let runId = null;
+    let participants = [];
+    // 편성에서 뺄 사람(MT 불참 등). 새로고침해도 유지되도록 이 브라우저에만 저장한다.
+    let excluded = new Set();
+    try { excluded = new Set(JSON.parse(localStorage.getItem('bap-exclude') || '[]')); } catch {}
+    const saveExcluded = () => { try { localStorage.setItem('bap-exclude', JSON.stringify([...excluded])); } catch {} };
     try { password = sessionStorage.getItem('bap-admin') || ''; } catch {}
 
     const $ = (id) => document.getElementById(id);
     const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const chip = (p, warn, removable) => `<span class="chip${warn ? ' warn' : ''}"><span class="g ${p.gender === 'female' ? 'f' : 'm'}">${p.gender === 'female' ? '여' : '남'}</span>${esc(p.name)}${removable ? `<button class="x" type="button" data-name="${esc(p.name)}" aria-label="${esc(p.name)} 삭제">×</button>` : ''}</span>`;
+    const chip = (p, warn, removable) => `<span class="chip${warn ? ' warn' : ''}${removable && excluded.has(p.name) ? ' off' : ''}"><span class="g ${p.gender === 'female' ? 'f' : 'm'}">${p.gender === 'female' ? '여' : '남'}</span>${removable ? `<span class="nm" data-name="${esc(p.name)}" role="button" tabindex="0">${esc(p.name)}</span>` : esc(p.name)}${removable ? `<button class="x" type="button" data-name="${esc(p.name)}" aria-label="${esc(p.name)} 삭제">×</button>` : ''}</span>`;
 
     async function api(action, extra = {}) {
       const res = await fetch('/api/group', {
@@ -166,11 +175,30 @@
       $('status').hidden = false;
       $('run-card').hidden = false;
       $('count').textContent = `· ${data.count}명`;
-      $('people').innerHTML = data.participants.map((p) => chip(p, !p.crossCheckOk, true)).join('') || '<p class="muted">아직 참여자가 없어요.</p>';
-      $('run').disabled = data.count < 4;
+      participants = data.participants;
+      // 지워진 사람은 제외 목록에서도 정리한다
+      excluded = new Set([...excluded].filter((n) => participants.some((p) => p.name === n)));
+      saveExcluded();
+      renderPeople();
+    }
+
+    function renderPeople() {
+      $('people').innerHTML = participants.map((p) => chip(p, !p.crossCheckOk, true)).join('') || '<p class="muted">아직 참여자가 없어요.</p>';
+      const inc = participants.filter((p) => !excluded.has(p.name));
+      const f = inc.filter((p) => p.gender === 'female').length;
+      $('target-count').textContent = `편성 대상 ${inc.length}명 (여 ${f} · 남 ${inc.length - f})${excluded.size ? ` · 제외 ${excluded.size}명` : ''}`;
+      $('run').disabled = inc.length < 4;
     }
 
     $('people').addEventListener('click', async (e) => {
+      const nm = e.target.closest('.nm');
+      if (nm) {
+        const n = nm.dataset.name;
+        if (excluded.has(n)) excluded.delete(n); else excluded.add(n);
+        saveExcluded();
+        renderPeople();
+        return;
+      }
       const btn = e.target.closest('.x');
       if (!btn) return;
       const name = btn.dataset.name;
@@ -201,7 +229,7 @@
       btn.innerHTML = '<span class="spinner"></span>AI가 궁합을 따져보는 중 (최대 1분)';
       $('run-error').classList.remove('show');
       try {
-        const data = await api('run');
+        const data = await api('run', { exclude: [...excluded] });
         runId = data.runId;
         $('publish').disabled = !runId;
         $('publish').textContent = '이 편성으로 확정하고 공개하기';
