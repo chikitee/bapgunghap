@@ -738,8 +738,8 @@
           `${f.rank === 1 ? `<p class="more">${c.trait}</p>` : ''}<p class="basis">${f.basis}</p>`)).join('')}
         ${card('路', '그다음 커리어 · 파트너 vs 이직 vs 개업', c.path.title, c.path.body, `<p class="basis">${c.path.basis}</p>`)}
         ${card('手', '일하는 스타일', c.style.title, c.style.body)}
-        ${card('忙', '바쁜 시즌 버티는 법', '나만의 충전법', c.busy)}
-        ${card('丁', '2027년 커리어 흐름', '내년의 나', c.year)}`;
+        ${card('忙', '바쁜 시즌 버티는 법', '나만의 충전법', c.busy, c.busyBasis ? `<p class="basis">${c.busyBasis}</p>` : '')}
+        ${card('丁', '2027년 커리어 흐름', '내년의 나', c.year, c.yearBasis ? `<p class="basis">${c.yearBasis}</p>` : '')}`;
       box.hidden = false;
     }
 
