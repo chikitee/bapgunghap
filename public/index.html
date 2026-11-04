@@ -774,12 +774,10 @@
         <p class="sub">입사할 때 잘 맞는 부서 두 가지, 그리고 그다음 커리어</p>
         ${c.fields.map((f) => card(f.rank === 1 ? '業' : '副', `입사 부서 ${f.rank}순위 · ${f.label}`, f.title, f.body,
           `${f.rank === 1 ? `<p class="more">${c.trait}</p>` : ''}
-          ${f.team ? `<div class="cd"><span class="k">추천 세부 팀</span><p><b>${f.team.name}</b><br>${f.team.why}</p></div>` : ''}
           ${f.strengths ? `<div class="cd"><span class="k">이런 순간에 강해요</span><ul>${f.strengths.map((x) => `<li>${x}</li>`).join('')}</ul></div>` : ''}
           <p class="basis">${f.basis}</p>`)).join('')}
         ${card('路', '그다음 커리어 · 파트너 vs 이직 vs 개업', c.path.title, c.path.body,
           `${c.path.weapon ? `<div class="cd"><span class="k">이 길에서 나의 무기</span><p>${c.path.weapon}</p></div>` : ''}
-          ${c.path.prepare ? `<div class="cd"><span class="k">지금부터 준비할 것</span><p>${c.path.prepare}</p></div>` : ''}
           ${c.path.timing ? `<div class="cd"><span class="k">큰 결정 타이밍</span><p>${c.path.timing}</p></div>` : ''}
           ${c.path.planB ? `<p class="more">${c.path.planB}</p>` : ''}
           <p class="basis">${c.path.basis}</p>`)}
