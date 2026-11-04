@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>밥궁합 · 사주로 찾는 나와 잘 맞는 밥조</title>
-  <meta name="description" content="생년월일을 입력하면 사주를 풀어 나와 기운이 잘 맞는 밥조를 짜드려요.">
+  <title>MT궁합 · 사주로 찾는 나와 잘 맞는 MT조</title>
+  <meta name="description" content="생년월일을 입력하면 사주를 풀어 나와 기운이 잘 맞는 MT조를 짜드려요.">
   <meta name="theme-color" content="#f4efe4">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="밥궁합">
-  <meta property="og:title" content="밥궁합 · 사주로 찾는 나와 잘 맞는 밥조">
-  <meta property="og:description" content="생년월일만 넣으면 내 사주와 잘 맞는 사람 타입을 바로 알려드려요. 밥조는 AI가 짜드려요!">
+  <meta property="og:site_name" content="MT궁합">
+  <meta property="og:title" content="MT궁합 · 사주로 찾는 나와 잘 맞는 MT조">
+  <meta property="og:description" content="생년월일만 넣으면 내 사주와 잘 맞는 사람 타입을 바로 알려드려요. MT조는 AI가 짜드려요!">
   <meta property="og:image" content="https://bapgunghap.vercel.app/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -527,9 +527,9 @@
   <main>
     <header class="hero">
       <div class="seal" aria-hidden="true"><span>궁합</span></div>
-      <p class="eyebrow">사주 밥조 편성</p>
-      <h1>밥궁합</h1>
-      <p class="subtitle">사주로 찾는 나와 잘 맞는 밥조</p>
+      <p class="eyebrow">사주 MT조 편성</p>
+      <h1>MT궁합</h1>
+      <p class="subtitle">사주로 찾는 나와 잘 맞는 MT조</p>
       <div class="elements-strip" aria-hidden="true">
         <span class="el-chip" style="background:var(--wood)">木</span>
         <span class="el-chip" style="background:var(--fire)">火</span>
@@ -541,21 +541,21 @@
 
     <section class="card notice" id="no-invite" hidden>
       <h2>초대 링크로 들어와 주세요</h2>
-      <p>밥궁합은 초대받은 사람만 참여할 수 있어요.<br>운영진에게 받은 링크를 다시 눌러주세요.</p>
+      <p>MT궁합은 초대받은 사람만 참여할 수 있어요.<br>운영진에게 받은 링크를 다시 눌러주세요.</p>
     </section>
 
     <form class="card" id="form" novalidate hidden>
       <h2>내 사주 입력하기</h2>
-      <p class="lead">입력한 정보로 사주를 풀고, 기운이 잘 어울리는 사람끼리 밥조를 짜드려요.</p>
+      <p class="lead">입력한 정보로 사주를 풀고, 기운이 잘 어울리는 사람끼리 MT조를 짜드려요.</p>
 
       <div class="field">
         <label class="title" for="name">이름 <small>닉네임도 괜찮아요</small></label>
         <input type="text" id="name" name="name" maxlength="20" autocomplete="nickname" placeholder="예: 이씨엔" required>
-        <p class="hint">밥조가 나오면 지금과 <b>같은 이름·성별·생년월일·시각</b>으로 다시 입력해야 내 조를 볼 수 있어요. 기억하기 쉬운 이름으로 써 주세요.</p>
+        <p class="hint">MT조가 나오면 지금과 <b>같은 이름·성별·생년월일·시각</b>으로 다시 입력해야 내 조를 볼 수 있어요. 기억하기 쉬운 이름으로 써 주세요.</p>
       </div>
 
       <div class="field">
-        <span class="title">성별 <small>궁합 계산과 밥조 편성에 써요</small></span>
+        <span class="title">성별 <small>궁합 계산과 MT조 편성에 써요</small></span>
         <div class="segment" role="radiogroup" aria-label="성별">
           <input type="radio" name="gender" id="gender-female" value="female"><label for="gender-female">여자</label>
           <input type="radio" name="gender" id="gender-male" value="male"><label for="gender-male">남자</label>
@@ -617,10 +617,10 @@
       <div class="specials" id="specials"></div>
       <div class="match" id="match"></div>
       <button type="button" class="next-page" id="next-page" hidden></button>
-      <p class="next" id="next">입력 완료! 모두 입력하면 <b>AI가 기운이 잘 맞는 밥조</b>를 짜요.<br>편성이 끝난 뒤 같은 정보로 다시 입력하면 내 밥조를 볼 수 있어요.</p>
+      <p class="next" id="next">입력 완료! 모두 입력하면 <b>AI가 기운이 잘 맞는 MT조</b>를 짜요.<br>편성이 끝난 뒤 같은 정보로 다시 입력하면 내 MT조를 볼 수 있어요.</p>
     </section>
 
-    <footer>밥궁합 · 입력한 정보는 밥조 편성에만 쓰이고 끝나면 삭제돼요</footer>
+    <footer>MT궁합 · 입력한 정보는 MT조 편성에만 쓰이고 끝나면 삭제돼요</footer>
   </main>
 
   <script>
@@ -653,7 +653,7 @@
       document.getElementById('next').hidden = !!b;
       if (!b) return;
       box.innerHTML = `
-        <p class="bapjo-label">나의 밥조</p>
+        <p class="bapjo-label">나의 MT조</p>
         <h3></h3>
         <div class="bapjo-members"></div>
         <p class="bapjo-reason"></p>
@@ -712,7 +712,7 @@
     // 결과가 길어서 세 페이지로 나눈다. 위에는 탭, 아래에는 다음 페이지 버튼.
     const PAGES = [
       { label: '사주와 나', ids: ['character', 'saju-block', 'reading', 'specials', 'match', 'next'] },
-      { label: '밥조·회계사 커리어', ids: ['bapjo', 'career'] },
+      { label: 'MT조·회계사 커리어', ids: ['bapjo', 'career'] },
       { label: '인생 흐름', ids: ['flow'] },
     ];
     function setupPages(hasBapjo) {
