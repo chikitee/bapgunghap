@@ -873,14 +873,15 @@
       const ending = last % 28 ? '이에요' : '예요';
       const theirType = DAY_MASTER_TEXT[m.stem];
 
-      // 잘 맞는 기운: 내게 부족한 기운 → 찰떡 타입의 기운 순으로, 중복 없이. 친구·동료·연인 모두에게 통하도록 연인 기운은 쓰지 않는다.
-      const picks = [];
-      const add = (el, why) => {
-        const found = picks.find((p) => p.el === el);
-        if (found) found.why.push(why); else picks.push({ el, why: [why] });
-      };
-      m.lacking.forEach((el) => add(el, '나에게 부족한 기운이에요'));
-      add(m.stemElement, '찰떡 타입이 가진 기운이에요');
+      // 찰떡 타입 하나로 합쳐 보여 준다. 내게 부족한 기운은 찰떡 타입과 겹치지 않을 때만 한 줄 더한다.
+      // 친구·동료·연인 모두에게 통하도록 연인 기운은 쓰지 않는다.
+      const lacking = m.lacking.filter((el) => el !== m.stemElement);
+      const lackLine = m.lacking.includes(m.stemElement)
+        ? `<li><span class="icon">補</span><span>찰떡 타입이 가진 <b>${ELEMENT_PERSON[m.stemElement][0]} 기운</b>은 마침 나에게 부족한 기운이라, 곁에 있으면 내 빈 곳이 채워져요.</span></li>`
+        : '';
+      const lackOthers = lacking.length
+        ? `<li><span class="icon">補</span><span>${lackLine ? '그 밖에 ' : ''}나에게 부족한 기운을 채워 주는 ${lacking.map((el) => `<b>${ELEMENT_PERSON[el][0]} 기운</b>의 ${ELEMENT_PERSON[el][1]}`).join('이나 ')}과도 잘 맞아요.</span></li>`
+        : '';
 
       document.getElementById('match').innerHTML = `
         <h3>나와 잘 맞는 사람</h3>
@@ -888,21 +889,14 @@
         <div class="match-hero">
           <div class="chars"><span class="char" style="background:${COLOR[m.stemElement]}">${HANJA[m.stemElement]}</span></div>
           <div>
-            <div class="nick">찰떡 궁합 타입</div>
+            <div class="nick">찰떡 궁합 타입 · ${ELEMENT_PERSON[m.stemElement][0]} 기운</div>
             <div class="name">${theirType}</div>
           </div>
         </div>
         <ul class="reasons">
           <li><span class="icon">心</span><span>나는 <b>${myType}</b>${ending}. 성향이 달라서 오히려 서로 끌리고, 서로의 빈 곳을 자연스럽게 채워줘요.</span></li>
           <li><span class="icon">和</span><span>밥 먹는 속도, 연락 템포처럼 <b>생활 리듬이 잘 맞는</b> 편이라 오래 함께 지내도 편해요.</span></li>
-        </ul>
-        <h4 class="pick-title">이런 기운을 가진 사람이 잘 맞아요</h4>
-        <ul class="picks">
-          ${picks.map(({ el, why }) => `
-            <li>
-              <span class="char" style="background:${COLOR[el]}">${HANJA[el]}</span>
-              <span><b>${ELEMENT_PERSON[el][0]} 기운</b> · ${ELEMENT_PERSON[el][1]}<small>${why.join(' · ')}</small></span>
-            </li>`).join('')}
+          ${lackLine}${lackOthers}
         </ul>`;
     }
 
