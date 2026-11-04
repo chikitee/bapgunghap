@@ -357,7 +357,6 @@
     .pairs-title { margin: 18px 0 8px; font-size: 12.5px; letter-spacing: .14em; color: #c9bfae; }
     .pair { padding: 10px 0; border-top: 1px solid rgba(244,239,228,.12); }
     .pair b { display: flex; align-items: center; gap: 8px; font-size: 15px; }
-    .pair .best { font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: var(--seal); color: #fbefe6; }
     .bapjo-how { margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(244,239,228,.12); text-align: left; }
     .bapjo-how summary { cursor: pointer; font-size: 14px; font-weight: 600; color: #f1e8d8; }
     .bapjo-how p { margin: 10px 0 0; font-size: 13.5px; color: #d9cfbd; }
@@ -683,12 +682,6 @@
         row.className = 'pair';
         const name = document.createElement('b');
         name.textContent = m.name;
-        if (m.best) {
-          const tag = document.createElement('span');
-          tag.className = 'best';
-          tag.textContent = '최고 궁합';
-          name.appendChild(tag);
-        }
         const ul = document.createElement('ul');
         for (const line of m.lines) {
           const li = document.createElement('li');
