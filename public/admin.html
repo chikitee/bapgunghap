@@ -205,10 +205,10 @@
         runId = data.runId;
         $('publish').disabled = !runId;
         $('publish').textContent = '이 편성으로 확정하고 공개하기';
-        $('ai-score').textContent = data.ai.totalScore;
-        $('base-score').textContent = data.baseline.totalScore;
+        $('ai-score').textContent = data.ai.objective ?? data.ai.totalScore;
+        $('base-score').textContent = data.baseline.objective ?? data.baseline.totalScore;
         $('calls').textContent = data.fallbackReason ? '대체' : `${data.toolCalls}회`;
-        $('fallback-note').textContent = data.fallbackReason ? `AI AI 편성이 실패해서 코드 편성안을 보여 드려요. 이대로 확정해도 되고, 잠시 뒤 다시 편성해도 돼요. (사유: ${data.fallbackReason})` : '';
+        $('fallback-note').textContent = data.fallbackReason ? `AI 편성이 실패해서 코드 편성안을 보여 드려요. 이대로 확정해도 되고, 잠시 뒤 다시 편성해도 돼요. (사유: ${data.fallbackReason})` : '';
         $('fallback-note').classList.toggle('show', !!data.fallbackReason);
         $('groups').innerHTML = data.ai.groups.map((g) => `
           <article class="group">

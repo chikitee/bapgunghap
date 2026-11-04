@@ -3,7 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { timingSafeEqual, randomInt } from 'node:crypto';
 import { runGroupingAgent } from '../lib/agent.js';
-import { baselineGrouping } from '../lib/compat.js';
+import { baselineGrouping, groupEnergy } from '../lib/compat.js';
 
 export const config = { maxDuration: 60 };
 
@@ -111,13 +111,13 @@ export default async function handler(req, res) {
   let fallbackReason = null;
   try {
     if (!process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY가 설정되지 않았어요.');
-    result = await runGroupingAgent(people, { apiKey: process.env.GEMINI_API_KEY, model });
+    result = await runGroupingAgent(people, { apiKey: process.env.GEMINI_API_KEY, model, baseline });
   } catch (err) {
     fallbackReason = err.message;
     result = {
       groups: baseline.groups.map((g, i) => ({
         name: `${i + 1}조`,
-        reason: '궁합 점수 합이 가장 높아지도록 코드로 찾은 조합이에요. 서로 부족한 기운을 채워주는 사람끼리 모였어요.',
+        reason: `궁합 점수가 가장 높아지도록 코드로 찾은 조합이에요. ${groupEnergy(g.members.map((id) => people.get(id))).text}`,
         members: g.members,
       })),
       evaluation: baseline,
@@ -155,6 +155,7 @@ export default async function handler(req, res) {
     toolCalls: result.log.length,
     ai: {
       totalScore: result.evaluation.totalScore,
+      objective: Math.round(result.evaluation.objective * 10) / 10,
       lowestGroup: result.evaluation.lowestGroup,
       groups: result.groups.map((g, i) => ({
         name: g.name,
@@ -166,6 +167,7 @@ export default async function handler(req, res) {
     },
     baseline: {
       totalScore: baseline.totalScore,
+      objective: Math.round(baseline.objective * 10) / 10,
       lowestGroup: baseline.lowestGroup,
       groups: baseline.groups.map((g) => ({ score: g.score, average: g.average, members: named(g.members) })),
     },
