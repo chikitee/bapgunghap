@@ -76,7 +76,7 @@ export default async function handler(req, res) {
   // 이름만 다르고 생일·시각·성별이 같은 기록이 있으면 닉네임을 잘못 쓴 경우가 대부분이다.
   // 새로 저장하지 않고 이름을 다시 확인하게 한다. 저장된 이름은 알려주지 않는다.
   if (await hasSameBirth(saju, input.gender)) {
-    return bad(res, 409, '같은 생년월일·시각으로 이미 참여한 기록이 있어요. 처음에 쓴 이름(닉네임)을 띄어쓰기까지 똑같이 다시 입력해 주세요. 처음 참여하는 거라면 운영진에게 알려주세요.');
+    return bad(res, 409, '같은 생년월일·시각으로 이미 참여한 기록이 있어요. 처음에 쓴 이름을 띄어쓰기까지 똑같이 다시 입력해 주세요. 처음 참여하는 거라면 운영진에게 알려주세요.');
   }
 
   const { data: participant, error: pErr } = await supabase
