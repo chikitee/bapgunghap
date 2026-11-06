@@ -374,6 +374,13 @@
     .bapjo-how li { font-size: 13.5px; color: #d9cfbd; }
     .bapjo-how li + li { margin-top: 4px; }
     .bapjo-how li b { color: #f6eddc; margin-right: 4px; }
+    .how-btn { display: block; width: 100%; margin-top: 16px; padding: 11px 14px; border: 1px solid rgba(244,239,228,.3); border-radius: 12px; background: rgba(244,239,228,.08); color: #f6eddc; font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+    .how-btn:hover { background: rgba(244,239,228,.14); }
+    .how-modal { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; background: rgba(15,13,11,.82); overflow-y: auto; }
+    .how-modal[hidden] { display: none; }
+    .how-modal figure { margin: 0; max-width: 440px; width: 100%; }
+    .how-modal img { display: block; width: 100%; height: auto; border-radius: 14px; }
+    .how-close { display: block; margin: 12px auto 0; padding: 9px 22px; border: 0; border-radius: 99px; background: var(--paper); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
     .pair ul { margin: 6px 0 0; padding-left: 18px; }
     .pair li { font-size: 14px; color: #e6ddcc; }
     .pair li + li { margin-top: 6px; }
@@ -639,6 +646,23 @@
       수: ['물', '차분하고 생각이 깊은 사람'],
     };
 
+    // 편성 원리 1~6단계 그림(공정성 안내). 버튼을 누르면 그림을 크게 띄운다.
+    function openHow() {
+      let modal = document.getElementById('how-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'how-modal';
+        modal.className = 'how-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-label', 'MT조 편성 원리 1~6단계');
+        modal.innerHTML = `<figure><img src="/how-6steps.png" alt="MT조 편성 원리 6단계: 1 참여자 모으기, 2 이름 가리기, 3 코드가 기준안 만들기, 4 AI가 더 좋은 안 찾고 코드가 검사, 5 AI 실패 시 기준안 사용, 6 실명 없이 기록하고 운영자가 비교 후 확정"><button type="button" class="how-close">닫기</button></figure>`;
+        modal.addEventListener('click', (e) => { if (e.target === modal || e.target.classList.contains('how-close')) modal.hidden = true; });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') modal.hidden = true; });
+        document.body.appendChild(modal);
+      }
+      modal.hidden = false;
+    }
+
     function renderBapjo(b) {
       const box = document.getElementById('bapjo');
       box.hidden = !b;
@@ -651,6 +675,7 @@
         <p class="bapjo-reason"></p>
         <p class="bapjo-energy" hidden></p>
         <div class="bapjo-pairs"></div>
+        <button type="button" class="how-btn">🔍 MT조 편성 원리 1~6단계 보기</button>
         <details class="bapjo-how">
           <summary>이 조는 어떻게 짜였나요?</summary>
           <p>사주 궁합에서 실제로 쓰는 규칙으로 조원끼리의 궁합을 하나하나 계산했어요.</p>
@@ -663,6 +688,7 @@
           </ul>
           <p>나와 제일 잘 맞는 사람끼리 묶은 게 아니라, <b>전체 궁합 점수가 가장 높고 어느 조도 처지지 않도록</b> AI가 여러 안을 비교해 골랐어요. 그래서 나의 최고 궁합은 다른 조에 있을 수도 있어요. AI에는 이름과 생년월일 없이 무작위 번호와 기운 정보만 보냈어요. 전통 해석을 바탕으로 한 재미 요소이니 가볍게 즐겨 주세요.</p>
         </details>`;
+      box.querySelector('.how-btn').addEventListener('click', openHow);
       box.querySelector('h3').textContent = b.name;
       box.querySelector('.bapjo-reason').textContent = b.reason;
       if (b.energy) {
