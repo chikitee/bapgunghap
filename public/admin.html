@@ -118,6 +118,7 @@
     <section class="card" id="run-card" hidden>
       <h2>AI 밥조 편성</h2>
       <p class="muted" style="margin-bottom:14px">AI에는 가명 번호, 성별, 일간·일지, 오행 개수만 보내요. 이름과 생년월일은 보내지 않아요.</p>
+      <label class="muted" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;cursor:pointer"><input type="checkbox" id="auto-publish" checked> <b>편성이 끝나면 바로 확정·공개</b> (조원들 앞에서 한 번에 누를 때)</label>
       <button class="btn big" id="run">AI로 밥조 편성하기</button>
       <div class="error" id="run-error" role="alert"></div>
     </section>
@@ -251,6 +252,7 @@
           </article>`).join('');
         $('result').hidden = false;
         $('result').scrollIntoView({ behavior: 'smooth' });
+        if ($('auto-publish').checked && runId) await publish();
       } catch (err) {
         $('run-error').textContent = err.message;
         $('run-error').classList.add('show');
@@ -260,7 +262,7 @@
       }
     });
 
-    $('publish').addEventListener('click', async () => {
+    async function publish() {
       const btn = $('publish');
       btn.disabled = true;
       $('publish-error').classList.remove('show');
@@ -272,7 +274,8 @@
         $('publish-error').classList.add('show');
         btn.disabled = false;
       }
-    });
+    }
+    $('publish').addEventListener('click', publish);
 
     if (password) loadStatus().catch(() => { password = ''; });
   </script>
