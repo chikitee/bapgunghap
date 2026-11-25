@@ -13,9 +13,16 @@ import { pairStory, groupEnergy, arrangeStories } from '../lib/compat.js';
 const CONSENT_VERSION = 'none-2026-11-04'; // 11/4 동의 안내·체크박스를 없앰(열 자체는 DB 제약 때문에 유지)
 const LIBRARY_VERSIONS = { manseryeok: '2.0.0', 'lunar-javascript': '1.7.7' };
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false },
-});
+// DB가 멈춰 있거나(무료 프로젝트 일시정지 등) 응답이 늦어도 화면이 무한 로딩에 빠지지 않게 요청마다 시간 제한을 둔다.
+const DB_TIMEOUT_MS = 6000;
+const timedFetch = (url, opts = {}) => fetch(url, { ...opts, signal: AbortSignal.timeout(DB_TIMEOUT_MS) });
+const supabase = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false },
+    db: { timeout: DB_TIMEOUT_MS, retry: false }, // 재시도하면 6초 × 여러 번이 되어 결국 멈춘 것처럼 보인다
+    global: { fetch: timedFetch },
+  })
+  : null;
 
 function bad(res, status, message) {
   return res.status(status).json({ error: message });
@@ -72,11 +79,24 @@ export default async function handler(req, res) {
     return bad(res, 400, '사주를 계산할 수 없는 날짜예요. 입력값을 확인해 주세요.');
   }
 
-  const existing = await findExisting(input.name, saju, input.gender);
+  // DB에 닿지 못해도 내 사주 풀이는 코드로 계산되므로 결과 화면은 그대로 보여 준다(저장·MT조만 빠짐).
+  let existing;
+  try {
+    existing = await findExisting(input.name, saju, input.gender);
+  } catch (err) {
+    console.error('DB 조회 실패, 저장 없이 결과만 보여 줌:', err?.message ?? err);
+    return sendResult(res, saju, input.gender, false, null, false);
+  }
   if (existing.exists) {
     if (existing.same) {
       await logView('result', String(body.visitor ?? '').slice(0, 40) || null, existing.id);
-      return sendResult(res, saju, input.gender, true, await findBapjo(existing.id));
+      let bapjo = null;
+      try {
+        bapjo = await findBapjo(existing.id);
+      } catch (err) {
+        console.error('MT조 조회 실패:', err?.message ?? err);
+      }
+      return sendResult(res, saju, input.gender, true, bapjo);
     }
     return bad(res, 409, '같은 이름으로 이미 참여한 사람이 있어요. 본인이라면 처음 입력한 정보 그대로, 다른 사람이라면 이름 뒤에 숫자를 붙여 입력해 주세요.');
   }
@@ -93,7 +113,8 @@ export default async function handler(req, res) {
     .single();
   if (pErr) {
     if (pErr.code === '23505') return bad(res, 409, '같은 이름으로 방금 다른 입력이 들어왔어요. 잠시 후 다시 시도해 주세요.');
-    return bad(res, 500, '저장 중 문제가 생겼어요. 잠시 후 다시 시도해 주세요.');
+    console.error('참여자 저장 실패, 저장 없이 결과만 보여 줌:', pErr.message);
+    return sendResult(res, saju, input.gender, false, null, false);
   }
 
   const id = participant.id;
@@ -117,7 +138,8 @@ export default async function handler(req, res) {
   if (sErr) {
     // 반쪽짜리 기록이 남지 않게 지운다(birth_inputs, saju_results는 cascade로 함께 삭제).
     await supabase.from('participants').delete().eq('id', id);
-    return bad(res, 500, '저장 중 문제가 생겼어요. 잠시 후 다시 시도해 주세요.');
+    console.error('사주 저장 실패, 저장 없이 결과만 보여 줌:', sErr.message);
+    return sendResult(res, saju, input.gender, false, null, false);
   }
 
   await logView('result', String(body.visitor ?? '').slice(0, 40) || null, id);
@@ -129,6 +151,7 @@ export default async function handler(req, res) {
 // 부가 기능이라 실패해도 본 기능은 그대로 동작한다.
 const VIEW_BUCKET = 'link-views';
 async function logView(kind, visitor, participantId) {
+  if (!supabase) return;
   try {
     const day = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
     const v = String(visitor ?? '').replace(/[^a-z0-9]/gi, '').slice(0, 20) || 'x';
@@ -142,10 +165,11 @@ async function logView(kind, visitor, participantId) {
   } catch {}
 }
 
-function sendResult(res, saju, gender, alreadySubmitted, bapjo = null) {
+function sendResult(res, saju, gender, alreadySubmitted, bapjo = null, saved = true) {
   return res.status(200).json({
     ok: true,
     alreadySubmitted,
+    saved,
     pillars: saju.pillars,
     dayMaster: saju.dayMaster,
     dayMasterElement: saju.dayMasterElement,
@@ -174,8 +198,9 @@ async function findBapjo(participantId) {
   const rows = members ?? [];
   // 궁합 설명은 서버에서 계산해 문장만 보낸다. 조원의 사주 글자 자체는 내려보내지 않는다.
   const person = (m) => {
-    const s = m.participants?.saju_results;
-    return s && {
+    const raw = m.participants?.saju_results;
+    const s = Array.isArray(raw) ? raw[0] : raw;
+    return s?.day_pillar && {
       gender: s.gender, dayStem: s.day_pillar[0], dayBranch: s.day_pillar[1],
       dayMasterElement: s.day_master_element, elements: s.elements,
     };
@@ -218,8 +243,10 @@ async function hasSameBirth(saju, gender) {
 // 같은 이름이 이미 있으면 새로 저장하지 않는다. 입력한 사주와 성별이 저장된 것과 같을 때만
 // 본인으로 보고 결과를 다시 보여준다. 이름만으로 남의 사주를 볼 수 없게 하기 위해서다.
 async function findExisting(name, saju, gender) {
-  const { data: person } = await supabase
+  if (!supabase) throw new Error('SUPABASE_URL 또는 SUPABASE_SERVICE_ROLE_KEY 환경변수가 없음');
+  const { data: person, error } = await supabase
     .from('participants').select('id').eq('display_name', name).maybeSingle();
+  if (error) throw new Error(error.message);
   if (!person) return { exists: false };
   const { data: stored } = await supabase
     .from('saju_results')
